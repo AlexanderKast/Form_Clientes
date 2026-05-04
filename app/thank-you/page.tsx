@@ -1,0 +1,133 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+
+interface SubmitResult {
+  fileId: string;
+  fileName: string;
+  webViewLink: string;
+}
+
+export default function ThankYouPage() {
+  const [result, setResult] = useState<SubmitResult | null>(null);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('submit_result');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.fileId) setResult(parsed as SubmitResult);
+        sessionStorage.removeItem('submit_result');
+        sessionStorage.removeItem('brand-intake-form');
+        sessionStorage.removeItem('brand-intake-completed');
+      } catch {}
+    }
+  }, []);
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16" style={{ background: '#0A0A0B' }}>
+      <div className="max-w-2xl w-full space-y-6">
+
+        {/* Logo */}
+        <div className="flex items-center justify-center mb-2">
+          <Image
+            src="/AC_Mesa de trabajo 1.png"
+            alt="Alexander Cast"
+            width={500}
+            height={500}
+            style={{ width: '140px', height: 'auto' }}
+          />
+        </div>
+
+        {/* Card principal */}
+        <div className="rounded-2xl p-8 text-center" style={{ background: '#111113', border: '1px solid rgba(255,255,255,0.07)' }}>
+
+          {/* Icono de éxito */}
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+            style={{ background: 'rgba(34,197,94,0.12)', border: '2px solid rgba(34,197,94,0.3)' }}
+          >
+            <svg className="w-10 h-10 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+
+          <h1 className="text-3xl font-bold text-white mb-3">Intake recibido</h1>
+          <p className="text-stone-400 text-lg mb-8">
+            Tu información llegó correctamente. Alexander revisará tu intake y te contactará en las próximas 24 horas.
+          </p>
+
+          {/* Archivo guardado */}
+          {result && (
+            <div className="mb-8 p-4 rounded-xl text-left" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <p className="text-sm font-medium text-green-400">Guardado en Google Drive</p>
+              </div>
+              <p className="text-xs text-stone-500 font-mono mb-3 ml-6">{result.fileName}</p>
+              <a
+                href={result.webViewLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-6 text-xs underline transition-colors"
+                style={{ color: '#D4A017' }}
+              >
+                Ver archivo en Drive →
+              </a>
+            </div>
+          )}
+
+          {/* Próximos pasos */}
+          <div className="text-left space-y-4 mb-8">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-stone-500">Próximos pasos</h2>
+
+            {[
+              { n: '1', title: 'Revisión (24 h)', desc: 'Alexander revisa tu intake y valida que la información esté completa.' },
+              { n: '2', title: 'Construcción (48–72 h)', desc: 'Diseño del sistema completo: agentes, skills, knowledge base y templates adaptados a tu voz.' },
+              { n: '3', title: 'Entrega + capacitación', desc: 'Recibes el sistema listo con una sesión 1-on-1 de implementación y 15 días de soporte.' },
+            ].map((s) => (
+              <div key={s.n} className="flex gap-4">
+                <div
+                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-black"
+                  style={{ background: 'linear-gradient(135deg, #F2CB51, #D4A017)' }}
+                >
+                  {s.n}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">{s.title}</p>
+                  <p className="text-sm text-stone-500 mt-0.5">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Contacto urgente */}
+          <div className="pt-6 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <p className="text-xs text-stone-600 mb-3">¿Alguna pregunta urgente?</p>
+            <a
+              href="mailto:founder@kreoon.com"
+              className="text-sm transition-colors"
+              style={{ color: '#D4A017' }}
+            >
+              founder@kreoon.com
+            </a>
+          </div>
+        </div>
+
+        {/* Volver */}
+        <div className="flex justify-center">
+          <Link
+            href="/"
+            className="text-sm text-stone-600 hover:text-stone-400 transition-colors"
+          >
+            Volver al inicio
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
