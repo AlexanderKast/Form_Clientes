@@ -83,9 +83,9 @@ export function PillarsSection({ pilares, mensajeCentral, onUpdate }: PillarsSec
           <div className="mt-2 p-3 bg-slate-50 border border-slate-200 rounded-lg">
             <p className="text-xs text-slate-500 font-medium mb-1">Ejemplos:</p>
             <ul className="text-xs text-slate-400 space-y-1">
-              <li>• "Cualquier persona puede vivir de su marca personal si domina la creación de contenido estratégico"</li>
-              <li>• "El problema no es que no tengas tiempo — es que no tienes un sistema"</li>
-              <li>• "El contenido que vende no es el más viral, es el más coherente"</li>
+              <li>&bull; &ldquo;Cualquier persona puede vivir de su marca personal si domina la creación de contenido estratégico&rdquo;</li>
+              <li>&bull; &ldquo;El problema no es que no tengas tiempo — es que no tienes un sistema&rdquo;</li>
+              <li>&bull; &ldquo;El contenido que vende no es el más viral, es el más coherente&rdquo;</li>
             </ul>
           </div>
         </div>
