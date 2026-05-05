@@ -227,7 +227,7 @@ export function VoiceSection({
           <p className="helper-text">1 = muy informal · 10 = muy formal</p>
           <Slider
             value={[nivelFormalidad]}
-            onValueChange={(vals) => onUpdate('nivelFormalidad', (vals as number[])[0])}
+            onValueChange={(vals) => onUpdate('nivelFormalidad', Array.isArray(vals) ? vals[0] : (vals as unknown as number))}
             min={1}
             max={10}
             step={1}

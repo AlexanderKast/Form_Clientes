@@ -155,7 +155,7 @@ export function ObjectivesSection({
         </div>
         <Slider
           value={[tiempoPorSemana]}
-          onValueChange={(vals) => onUpdate('tiempoPorSemana', (vals as number[])[0])}
+          onValueChange={(vals) => onUpdate('tiempoPorSemana', Array.isArray(vals) ? vals[0] : (vals as unknown as number))}
           min={1}
           max={40}
           step={1}

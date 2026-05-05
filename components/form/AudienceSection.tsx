@@ -166,7 +166,7 @@ export function AudienceSection({
         </div>
         <Slider
           value={[nivelSofisticacion]}
-          onValueChange={(vals) => onUpdate('nivelSofisticacion', (vals as number[])[0])}
+          onValueChange={(vals) => onUpdate('nivelSofisticacion', Array.isArray(vals) ? vals[0] : (vals as unknown as number))}
           min={0}
           max={5}
           step={1}
