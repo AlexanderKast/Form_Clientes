@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { X, Plus } from 'lucide-react';
+import { AISuggestionChips } from './AISuggestionChips';
 
 interface PhilosophySectionProps {
   creenciasFundamentales: string[];
@@ -139,6 +140,29 @@ export function PhilosophySection({
   historiaLogros,
   onUpdate,
 }: PhilosophySectionProps) {
+  const [creenciasSugs, setCreenciasSugs] = useState<string[]>([]);
+  const [creenciasLoading, setCreenciasLoading] = useState(false);
+
+  const handlePredictCreencias = useCallback(async () => {
+    if (creenciasSugs.length > 0) { setCreenciasSugs([]); return; }
+    setCreenciasLoading(true);
+    try {
+      const res = await fetch('/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          campo: 'creenciasFundamentales',
+          contexto: { propositoMarca, creenciasExistentes: creenciasFundamentales.join(', ') },
+        }),
+      });
+      const data = await res.json();
+      setCreenciasSugs(Array.isArray(data.sugerencias) ? data.sugerencias : []);
+    } catch {
+      setCreenciasSugs([]);
+    }
+    setCreenciasLoading(false);
+  }, [creenciasSugs.length, propositoMarca, creenciasFundamentales]);
+
   return (
     <div className="space-y-8">
       {/* Propósito de marca */}
@@ -182,19 +206,46 @@ export function PhilosophySection({
 
       <div className="section-divider" />
 
-      <DynamicList
-        label="Creencias fundamentales"
-        description="Verdades que tu marca defiende profundamente. Las que guían cada decisión de contenido."
-        items={creenciasFundamentales}
-        onAdd={(v) => onUpdate('creenciasFundamentales', [...creenciasFundamentales, v])}
-        onRemove={(i) =>
-          onUpdate('creenciasFundamentales', creenciasFundamentales.filter((_, j) => j !== i))
-        }
-        placeholder='"Cualquier persona puede aprender a invertir si tiene las herramientas correctas"'
-        min={3}
-        max={7}
-        variant="gold"
-      />
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-transparent select-none">spacer</span>
+          {propositoMarca.length >= 30 && (
+            <button
+              type="button"
+              onClick={handlePredictCreencias}
+              className="text-[11px] text-yellow-400/70 hover:text-yellow-400 transition-colors flex items-center gap-1"
+            >
+              <span>✦</span>
+              {creenciasLoading ? 'Pensando...' : creenciasSugs.length > 0 ? 'Cerrar' : 'Ideas de arranque'}
+            </button>
+          )}
+        </div>
+        {(creenciasSugs.length > 0 || creenciasLoading) && (
+          <AISuggestionChips
+            suggestions={creenciasSugs}
+            loading={creenciasLoading}
+            onSelect={(s) => {
+              if (!creenciasFundamentales.includes(s) && creenciasFundamentales.length < 7) {
+                onUpdate('creenciasFundamentales', [...creenciasFundamentales, s]);
+              }
+              setCreenciasSugs((prev) => prev.filter((x) => x !== s));
+            }}
+          />
+        )}
+        <DynamicList
+          label="Creencias fundamentales"
+          description="Verdades que tu marca defiende profundamente. Las que guían cada decisión de contenido."
+          items={creenciasFundamentales}
+          onAdd={(v) => onUpdate('creenciasFundamentales', [...creenciasFundamentales, v])}
+          onRemove={(i) =>
+            onUpdate('creenciasFundamentales', creenciasFundamentales.filter((_, j) => j !== i))
+          }
+          placeholder='"Cualquier persona puede aprender a invertir si tiene las herramientas correctas"'
+          min={3}
+          max={7}
+          variant="gold"
+        />
+      </div>
 
       <DynamicList
         label="Qué rechaza la marca"

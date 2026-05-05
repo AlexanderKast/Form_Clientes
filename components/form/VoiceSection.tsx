@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Plus } from 'lucide-react';
+import { AISuggestionChips } from './AISuggestionChips';
 
 interface VoiceSectionProps {
   estiloComuncacional: string;
@@ -146,6 +147,8 @@ export function VoiceSection({
   const [newProhibicion, setNewProhibicion] = useState('');
   const [expresionMode, setExpresionMode] = useState<InputMode>('single');
   const [prohibicionMode, setProhibicionMode] = useState<InputMode>('single');
+  const [expresionSugs, setExpresionSugs] = useState<string[]>([]);
+  const [expresionSugsLoading, setExpresionSugsLoading] = useState(false);
 
   const addExpresion = () => {
     const v = newExpresion.trim();
@@ -166,6 +169,26 @@ export function VoiceSection({
   const addBulkExpresiones = (items: string[]) => {
     onUpdate('expresionesNaturales', [...expresionesNaturales, ...items.filter((i) => !expresionesNaturales.includes(i))]);
   };
+
+  const handlePredictExpresiones = useCallback(async () => {
+    if (expresionSugs.length > 0) { setExpresionSugs([]); return; }
+    setExpresionSugsLoading(true);
+    try {
+      const res = await fetch('/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          campo: 'expresionesNaturales',
+          contexto: { estiloComuncacional, expresionesExistentes: expresionesNaturales.join(', ') },
+        }),
+      });
+      const data = await res.json();
+      setExpresionSugs(Array.isArray(data.sugerencias) ? data.sugerencias : []);
+    } catch {
+      setExpresionSugs([]);
+    }
+    setExpresionSugsLoading(false);
+  }, [expresionSugs.length, estiloComuncacional, expresionesNaturales]);
 
   const addBulkProhibiciones = (items: string[]) => {
     onUpdate('prohibiciones', [...prohibiciones, ...items.filter((i) => !prohibiciones.includes(i))]);
@@ -234,12 +257,37 @@ export function VoiceSection({
 
       {/* Expresiones naturales */}
       <div className="p-5 rounded-xl bg-gray-950/50 border border-gray-800 space-y-4">
-        <div>
-          <Label className="label-text">Expresiones naturales *</Label>
-          <p className="helper-text">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <Label className="label-text">Expresiones naturales *</Label>
+            <p className="helper-text">
             Frases que tu marca USA frecuentemente. Piensa en cómo hablas con tus clientes.
           </p>
+          </div>
+          {expresionesNaturales.length >= 1 && estiloComuncacional.length > 20 && (
+            <button
+              type="button"
+              onClick={handlePredictExpresiones}
+              className="flex-shrink-0 text-[11px] text-yellow-400/70 hover:text-yellow-400 transition-colors flex items-center gap-1 mt-0.5"
+            >
+              <span>✦</span>
+              {expresionSugsLoading ? 'Pensando...' : expresionSugs.length > 0 ? 'Cerrar' : 'Sugerir más'}
+            </button>
+          )}
         </div>
+
+        {(expresionSugs.length > 0 || expresionSugsLoading) && (
+          <AISuggestionChips
+            suggestions={expresionSugs}
+            loading={expresionSugsLoading}
+            onSelect={(s) => {
+              if (!expresionesNaturales.includes(s)) {
+                onUpdate('expresionesNaturales', [...expresionesNaturales, s]);
+              }
+              setExpresionSugs((prev) => prev.filter((x) => x !== s));
+            }}
+          />
+        )}
 
         <ProgressCounter current={expresionesNaturales.length} min={15} label="expresiones mínimo" />
 

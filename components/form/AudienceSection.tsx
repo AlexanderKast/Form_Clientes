@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { X, Plus } from 'lucide-react';
+import { AISuggestionChips } from './AISuggestionChips';
 
 const SOFISTICACION_LABELS = [
   'Principiante total (0)',
@@ -31,6 +32,20 @@ interface AudienceSectionProps {
   onUpdate: (field: string, value: unknown) => void;
 }
 
+async function fetchPredictions(campo: string, contexto: Record<string, string | string[] | number>): Promise<string[]> {
+  try {
+    const res = await fetch('/api/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campo, contexto }),
+    });
+    const data = await res.json();
+    return Array.isArray(data.sugerencias) ? data.sugerencias : [];
+  } catch {
+    return [];
+  }
+}
+
 export function AudienceSection({
   perfilDemografico,
   problemaPrincipal,
@@ -46,6 +61,11 @@ export function AudienceSection({
 }: AudienceSectionProps) {
   const [newObjecion, setNewObjecion] = useState('');
   const [newCompetidor, setNewCompetidor] = useState('');
+
+  const [problemaSugs, setProblemasSugs] = useState<string[]>([]);
+  const [problemaLoading, setProblemaLoading] = useState(false);
+  const [ventajaSugs, setVentajaSugs] = useState<string[]>([]);
+  const [ventajaLoading, setVentajaLoading] = useState(false);
 
   const addObjecion = () => {
     const v = newObjecion.trim();
@@ -63,6 +83,22 @@ export function AudienceSection({
     }
   };
 
+  const handlePerfilBlur = useCallback(async () => {
+    if (perfilDemografico.length < 30 || problemaSugs.length > 0) return;
+    setProblemaLoading(true);
+    const sugs = await fetchPredictions('problemaPrincipal', { perfilDemografico });
+    setProblemasSugs(sugs);
+    setProblemaLoading(false);
+  }, [perfilDemografico, problemaSugs.length]);
+
+  const handlePredictVentaja = useCallback(async () => {
+    if (ventajaSugs.length > 0) { setVentajaSugs([]); return; }
+    setVentajaLoading(true);
+    const sugs = await fetchPredictions('ventajaCompetitiva', { competenciaDirecta });
+    setVentajaSugs(sugs);
+    setVentajaLoading(false);
+  }, [ventajaSugs.length, competenciaDirecta]);
+
   return (
     <div className="space-y-6">
       {/* Perfil demográfico */}
@@ -76,6 +112,7 @@ export function AudienceSection({
           className="mt-2 min-h-[100px]"
           value={perfilDemografico}
           onChange={(e) => onUpdate('perfilDemografico', e.target.value)}
+          onBlur={handlePerfilBlur}
           placeholder="Hombres y mujeres de 28-45 años, emprendedores o freelancers con ingresos variables, viven en ciudades medianas o grandes de LATAM..."
         />
       </div>
@@ -92,6 +129,14 @@ export function AudienceSection({
           value={problemaPrincipal}
           onChange={(e) => onUpdate('problemaPrincipal', e.target.value)}
           placeholder="No saben cómo atraer clientes de forma consistente sin depender de referidos o de pagar ads costosos..."
+        />
+        <AISuggestionChips
+          suggestions={problemaSugs}
+          loading={problemaLoading}
+          onSelect={(s) => {
+            onUpdate('problemaPrincipal', s);
+            setProblemasSugs([]);
+          }}
         />
       </div>
 
@@ -227,9 +272,21 @@ export function AudienceSection({
 
       {/* Ventaja competitiva */}
       <div className="field-group">
-        <Label htmlFor="ventajaCompetitiva" className="label-text">
-          Ventaja competitiva *
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="ventajaCompetitiva" className="label-text">
+            Ventaja competitiva *
+          </Label>
+          {competenciaDirecta.length >= 1 && (
+            <button
+              type="button"
+              onClick={handlePredictVentaja}
+              className="text-[11px] text-yellow-400/70 hover:text-yellow-400 transition-colors flex items-center gap-1"
+            >
+              <span>✦</span>
+              {ventajaLoading ? 'Pensando...' : ventajaSugs.length > 0 ? 'Cerrar' : 'Ideas de arranque'}
+            </button>
+          )}
+        </div>
         <p className="helper-text">¿Por qué alguien debería elegirte a ti sobre la competencia?</p>
         <Textarea
           id="ventajaCompetitiva"
@@ -237,6 +294,14 @@ export function AudienceSection({
           value={ventajaCompetitiva}
           onChange={(e) => onUpdate('ventajaCompetitiva', e.target.value)}
           placeholder="A diferencia de otros, yo..."
+        />
+        <AISuggestionChips
+          suggestions={ventajaSugs}
+          loading={ventajaLoading}
+          onSelect={(s) => {
+            onUpdate('ventajaCompetitiva', s);
+            setVentajaSugs([]);
+          }}
         />
       </div>
 
