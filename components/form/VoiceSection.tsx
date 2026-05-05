@@ -6,8 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Plus } from 'lucide-react';
 import { AISuggestionChips } from './AISuggestionChips';
 
@@ -217,41 +215,90 @@ export function VoiceSection({
         />
       </div>
 
-      {/* Grid: formalidad + humor */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <div className="p-4 rounded-xl bg-gray-950/50 border border-gray-800 space-y-3">
-          <Label className="label-text">
-            ¿Qué tan formal habla tu marca?{' '}
-            <span className="text-yellow-400">{nivelFormalidad}/10</span>
-          </Label>
-          <p className="helper-text">1 = muy casual, como amigos · 10 = muy formal, como empresa grande</p>
-          <Slider
-            value={[nivelFormalidad]}
-            onValueChange={(vals) => onUpdate('nivelFormalidad', Array.isArray(vals) ? vals[0] : (vals as unknown as number))}
-            min={1}
-            max={10}
-            step={1}
-          />
-          <div className="flex justify-between text-xs text-gray-600">
-            <span>Informal</span>
-            <span>Formal</span>
-          </div>
+      {/* Formalidad — tarjetas visuales */}
+      <div className="p-5 rounded-xl bg-gray-950/50 border border-gray-800 space-y-3">
+        <Label className="label-text">¿Cómo habla tu marca? *</Label>
+        <p className="helper-text">Elige el tono que más se parece a cómo te comunicas con tus clientes.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-1">
+          {[
+            { value: 2,  emoji: '😂', label: 'Muy casual',    description: 'Como hablar con un amigo, sin filtros' },
+            { value: 4,  emoji: '😊', label: 'Relajado',      description: 'Cercano y directo, pero ordenado' },
+            { value: 6,  emoji: '🤝', label: 'Equilibrado',   description: 'Ni muy informal ni muy serio' },
+            { value: 8,  emoji: '👔', label: 'Profesional',   description: 'Serio, con autoridad y criterio' },
+            { value: 10, emoji: '🏛️', label: 'Muy formal',    description: 'Corporativo e institucional' },
+          ].map((card) => {
+            const isSelected = nivelFormalidad <= card.value && (card.value === 2 || nivelFormalidad > card.value - 2);
+            return (
+              <button
+                key={card.value}
+                type="button"
+                onClick={() => onUpdate('nivelFormalidad', card.value)}
+                className={`
+                  relative p-3 rounded-xl border-2 text-left transition-all hover:-translate-y-0.5 focus:outline-none
+                  ${isSelected
+                    ? 'border-yellow-400 bg-yellow-400/5 shadow-[0_0_12px_rgba(251,191,36,0.1)]'
+                    : 'border-gray-800 bg-gray-900 hover:border-gray-700'
+                  }
+                `}
+              >
+                {isSelected && (
+                  <div className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-yellow-400 flex items-center justify-center">
+                    <svg className="w-2 h-2 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+                <div className="text-xl mb-1">{card.emoji}</div>
+                <div className={`font-semibold text-xs mb-1 leading-tight ${isSelected ? 'text-yellow-400' : 'text-white'}`}>
+                  {card.label}
+                </div>
+                <div className="text-[10px] text-gray-500 leading-snug">{card.description}</div>
+              </button>
+            );
+          })}
         </div>
+      </div>
 
-        <div className="field-group">
-          <Label className="label-text">Uso del humor *</Label>
-          <p className="helper-text">¿Con qué frecuencia aparece el humor?</p>
-          <Select value={usoHumor} onValueChange={(v) => onUpdate('usoHumor', v)}>
-            <SelectTrigger className="mt-2">
-              <SelectValue placeholder="Selecciona..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Alto">Alto — humor frecuente</SelectItem>
-              <SelectItem value="Moderado">Moderado — ocasionalmente</SelectItem>
-              <SelectItem value="Bajo">Bajo — raramente</SelectItem>
-              <SelectItem value="Sin humor">Sin humor — tono serio</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* Humor */}
+      <div className="field-group">
+        <Label className="label-text">¿Usas humor en tu contenido? *</Label>
+        <p className="helper-text">¿Con qué frecuencia aparecen chistes, ironia o momentos graciosos?</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+          {[
+            { value: 'Alto',      emoji: '😄', label: 'Bastante',    description: 'El humor es parte de tu estilo' },
+            { value: 'Moderado',  emoji: '🙂', label: 'A veces',     description: 'Lo usas cuando viene al caso' },
+            { value: 'Bajo',      emoji: '😐', label: 'Poco',        description: 'Raramente, casi siempre serio' },
+            { value: 'Sin humor', emoji: '🎯', label: 'Sin humor',   description: 'Tono directo y profesional' },
+          ].map((opt) => {
+            const isSelected = usoHumor === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onUpdate('usoHumor', opt.value)}
+                className={`
+                  relative p-3 rounded-xl border-2 text-left transition-all hover:-translate-y-0.5 focus:outline-none
+                  ${isSelected
+                    ? 'border-yellow-400 bg-yellow-400/5 shadow-[0_0_12px_rgba(251,191,36,0.1)]'
+                    : 'border-gray-800 bg-gray-900 hover:border-gray-700'
+                  }
+                `}
+              >
+                {isSelected && (
+                  <div className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-yellow-400 flex items-center justify-center">
+                    <svg className="w-2 h-2 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+                <div className="text-xl mb-1">{opt.emoji}</div>
+                <div className={`font-semibold text-xs mb-0.5 ${isSelected ? 'text-yellow-400' : 'text-white'}`}>
+                  {opt.label}
+                </div>
+                <div className="text-[10px] text-gray-500 leading-snug">{opt.description}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
