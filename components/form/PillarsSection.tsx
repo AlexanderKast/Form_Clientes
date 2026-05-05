@@ -78,7 +78,7 @@ export function PillarsSection({ pilares, mensajeCentral, onUpdate }: PillarsSec
             Tu mensaje central *
           </Label>
           <p className="helper-text">
-            La creencia o paradigma que quieres implantar en tu audiencia. No es un slogan — es una verdad que defiendes con convicción.
+            La idea principal que tu marca repite una y otra vez. No es un slogan — es una verdad que defiendes con convicción y que guía todo tu contenido.
           </p>
         </div>
 

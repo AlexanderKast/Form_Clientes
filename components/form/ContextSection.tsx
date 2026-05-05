@@ -120,8 +120,8 @@ export function ContextSection({
         </div>
 
         <div className="field-group">
-          <Label className="text-xs font-semibold text-gray-400">Hero Influencer</Label>
-          <p className="text-xs text-gray-600 mt-0.5">La persona que admiras como creador — tu modelo a seguir.</p>
+          <Label className="text-xs font-semibold text-gray-400">Tu referente favorito</Label>
+          <p className="text-xs text-gray-600 mt-0.5">El creador o figura pública que más admiras y cuyo estilo te gustaría tener como referencia.</p>
           <Input
             className="mt-2 text-sm"
             value={figurasReferencia.heroInfluencer}
@@ -186,10 +186,10 @@ export function ContextSection({
       />
 
       <OptionalList
-        label="Integraciones necesarias"
-        description="Herramientas o plataformas que el sistema debe conocer."
+        label="¿Qué herramientas usas en tu negocio?"
+        description="Plataformas de venta, email, comunidad o automatización que el sistema debe conocer para integrarse."
         items={integracionesNecesarias}
-        placeholder="Ej: Mailchimp para newsletters / Hotmart para ventas"
+        placeholder="Ej: Mailchimp para emails / Hotmart para ventas / WhatsApp para atención"
         onAdd={(v) => onUpdate('integracionesNecesarias', [...integracionesNecesarias, v])}
         onRemove={(i) => onUpdate('integracionesNecesarias', integracionesNecesarias.filter((_, j) => j !== i))}
       />

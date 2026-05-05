@@ -221,10 +221,10 @@ export function VoiceSection({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="p-4 rounded-xl bg-gray-950/50 border border-gray-800 space-y-3">
           <Label className="label-text">
-            Formalidad:{' '}
+            ¿Qué tan formal habla tu marca?{' '}
             <span className="text-yellow-400">{nivelFormalidad}/10</span>
           </Label>
-          <p className="helper-text">1 = muy informal · 10 = muy formal</p>
+          <p className="helper-text">1 = muy casual, como amigos · 10 = muy formal, como empresa grande</p>
           <Slider
             value={[nivelFormalidad]}
             onValueChange={(vals) => onUpdate('nivelFormalidad', Array.isArray(vals) ? vals[0] : (vals as unknown as number))}
@@ -259,10 +259,10 @@ export function VoiceSection({
       <div className="p-5 rounded-xl bg-gray-950/50 border border-gray-800 space-y-4">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <Label className="label-text">Expresiones naturales *</Label>
+            <Label className="label-text">Frases que tu marca sí diría *</Label>
             <p className="helper-text">
-            Frases que tu marca USA frecuentemente. Piensa en cómo hablas con tus clientes.
-          </p>
+              Palabras o frases que usas naturalmente cuando hablas con tus clientes. Cuantas más pongas, más auténtica y precisa quedará la voz de tu marca — la IA las usa para aprender a escribir <em>exactamente como tú</em>.
+            </p>
           </div>
           {expresionesNaturales.length >= 1 && estiloComuncacional.length > 20 && (
             <button
@@ -355,9 +355,9 @@ export function VoiceSection({
       {/* Prohibiciones */}
       <div className="p-5 rounded-xl bg-gray-950/50 border border-gray-800 space-y-4">
         <div>
-          <Label className="label-text">Prohibiciones absolutas *</Label>
+          <Label className="label-text">Cosas que tu marca NUNCA diría *</Label>
           <p className="helper-text">
-            Frases, términos o actitudes que la marca NUNCA usaría bajo ningún contexto.
+            Palabras, frases o actitudes que van en contra de tu marca. Cada prohibición que agregues le enseña a la IA qué evitar — esto es lo que separa una voz genérica de una voz auténticamente tuya.
           </p>
         </div>
 

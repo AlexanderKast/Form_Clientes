@@ -6,10 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 
 const OBJETIVO_OPTIONS = [
-  { id: 'awareness', label: 'Awareness',     description: 'Alcance masivo, dar a conocer la marca', emoji: '📢' },
-  { id: 'leads',     label: 'Leads',         description: 'Captar prospectos interesados',           emoji: '🎯' },
-  { id: 'ventas',    label: 'Ventas',        description: 'Convertir seguidores en compradores',     emoji: '💰' },
-  { id: 'comunidad', label: 'Comunidad',     description: 'Construir audiencia fiel y activa',       emoji: '❤️' },
+  { id: 'awareness', label: 'Visibilidad',   description: 'Que más gente conozca tu marca y te descubra', emoji: '📢' },
+  { id: 'leads',     label: 'Contactos',     description: 'Que personas interesadas te escriban o dejen sus datos', emoji: '🎯' },
+  { id: 'ventas',    label: 'Ventas',        description: 'Convertir seguidores en compradores directos', emoji: '💰' },
+  { id: 'comunidad', label: 'Comunidad',     description: 'Construir una audiencia fiel que te apoye y comparta', emoji: '❤️' },
 ] as const;
 
 const PLATAFORMAS = [
@@ -90,14 +90,16 @@ export function ObjectivesSection({
 
       {/* KPI crítico */}
       <div className="field-group">
-        <Label htmlFor="kpiCritico" className="label-text">KPI crítico *</Label>
-        <p className="helper-text">La métrica principal que medirá el éxito.</p>
+        <Label htmlFor="kpiCritico" className="label-text">¿Cómo sabrás que está funcionando? *</Label>
+        <p className="helper-text">
+          El número o resultado concreto que te dirá &quot;esto sí está dando resultados&quot;. Por ejemplo: 20 personas nuevas que preguntan por mes, 1.000 seguidores nuevos, 5 ventas semanales...
+        </p>
         <Input
           id="kpiCritico"
           className="mt-2"
           value={kpiCritico}
           onChange={(e) => onUpdate('kpiCritico', e.target.value)}
-          placeholder="Ej: 20 leads/mes / 5% tasa conversión / 1000 nuevos seguidores/mes"
+          placeholder="Ej: 20 personas preguntando por mes / 1.000 seguidores nuevos / 5 ventas semanales"
         />
       </div>
 
@@ -170,26 +172,28 @@ export function ObjectivesSection({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="field-group">
           <Label htmlFor="presupuesto" className="label-text">
-            Presupuesto mensual{' '}
+            ¿Cuánto puedes invertir al mes?{' '}
             <span className="font-normal text-gray-600">(opcional)</span>
           </Label>
+          <p className="helper-text">Para publicidad pagada (pauta). Si no tienes presupuesto de pauta, escribe $0.</p>
           <Input
             id="presupuesto"
             className="mt-2"
             value={presupuesto}
             onChange={(e) => onUpdate('presupuesto', e.target.value)}
-            placeholder="Ej: $500 USD/mes"
+            placeholder="Ej: $300 USD/mes para pauta en Instagram"
           />
         </div>
 
         <div className="field-group">
-          <Label htmlFor="timeline" className="label-text">Timeline *</Label>
+          <Label htmlFor="timeline" className="label-text">¿En cuánto tiempo quieres ver resultados? *</Label>
+          <p className="helper-text">Sé realista — construir marca sólida toma tiempo.</p>
           <Input
             id="timeline"
             className="mt-2"
             value={timeline}
             onChange={(e) => onUpdate('timeline', e.target.value)}
-            placeholder="Ej: Resultados en 90 días"
+            placeholder="Ej: Primeros resultados en 90 días, escala en 6 meses"
           />
         </div>
       </div>
@@ -197,15 +201,16 @@ export function ObjectivesSection({
       {/* Equipo */}
       <div className="field-group">
         <Label htmlFor="equipo" className="label-text">
-          Equipo disponible{' '}
+          ¿Con quién cuentas para crear contenido?{' '}
           <span className="font-normal text-gray-600">(opcional)</span>
         </Label>
+        <p className="helper-text">¿Trabajas solo o tienes ayuda? Eso define qué tan ambicioso puede ser el plan.</p>
         <Textarea
           id="equipo"
           className="mt-2"
           value={equipo}
           onChange={(e) => onUpdate('equipo', e.target.value)}
-          placeholder="Solo yo por ahora / Tengo 1 community manager part-time / Equipo de 3 personas"
+          placeholder="Solo yo por ahora / Tengo 1 asistente part-time / Equipo de 3: yo, editor de video, community manager"
         />
       </div>
     </div>

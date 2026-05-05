@@ -5,17 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { X, Plus } from 'lucide-react';
 import { AISuggestionChips } from './AISuggestionChips';
 
-const SOFISTICACION_LABELS = [
-  'Principiante total (0)',
-  'Conocimiento básico (1)',
-  'Intermedio (2)',
-  'Avanzado (3)',
-  'Muy avanzado (4)',
-  'Experto (5)',
+const SOFISTICACION_CARDS = [
+  { value: 0, emoji: '🌱', label: 'Principiante total', description: 'Nunca ha oído hablar del tema' },
+  { value: 1, emoji: '📖', label: 'Aprendiendo', description: 'Ha escuchado algo pero no sabe bien cómo funciona' },
+  { value: 2, emoji: '🔧', label: 'Intermedio', description: 'Conoce el tema y ha intentado algo sin mucho éxito' },
+  { value: 3, emoji: '📈', label: 'Avanzado', description: 'Ya tiene resultados pero busca optimizar' },
+  { value: 4, emoji: '🚀', label: 'Muy avanzado', description: 'Conoce bien el tema y compara opciones' },
+  { value: 5, emoji: '🏆', label: 'Experto', description: 'Domina el tema y busca soluciones específicas' },
 ];
 
 interface AudienceSectionProps {
@@ -104,9 +103,9 @@ export function AudienceSection({
       {/* Perfil demográfico */}
       <div className="field-group">
         <Label htmlFor="perfilDemografico" className="label-text">
-          Perfil demográfico detallado *
+          ¿Quién es tu cliente ideal? *
         </Label>
-        <p className="helper-text">Edad, género, ocupación, nivel de ingresos, ubicación, intereses...</p>
+        <p className="helper-text">Describe a esa persona perfecta: edad, qué hace, dónde vive, cuánto gana, qué le gusta...</p>
         <Textarea
           id="perfilDemografico"
           className="mt-2 min-h-[100px]"
@@ -158,22 +157,42 @@ export function AudienceSection({
       {/* Nivel de sofisticación */}
       <div className="p-5 rounded-xl bg-gray-950/50 border border-gray-800 space-y-4">
         <div>
-          <Label className="label-text">
-            Nivel de sofisticación:{' '}
-            <span className="text-yellow-400">{SOFISTICACION_LABELS[nivelSofisticacion]}</span>
-          </Label>
-          <p className="helper-text">0 = nunca ha oído hablar del tema · 5 = experto que ya conoce todo</p>
+          <Label className="label-text">¿Qué tanto sabe tu cliente del tema? *</Label>
+          <p className="helper-text">
+            Esto define el vocabulario y la profundidad de tu contenido. Elige la opción que mejor describe a la mayoría de tus clientes.
+          </p>
         </div>
-        <Slider
-          value={[nivelSofisticacion]}
-          onValueChange={(vals) => onUpdate('nivelSofisticacion', Array.isArray(vals) ? vals[0] : (vals as unknown as number))}
-          min={0}
-          max={5}
-          step={1}
-        />
-        <div className="flex justify-between text-xs text-gray-600">
-          <span>Principiante</span>
-          <span>Experto</span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {SOFISTICACION_CARDS.map((card) => {
+            const isSelected = nivelSofisticacion === card.value;
+            return (
+              <button
+                key={card.value}
+                type="button"
+                onClick={() => onUpdate('nivelSofisticacion', card.value)}
+                className={`
+                  relative p-3 rounded-xl border-2 text-left transition-all hover:-translate-y-0.5 focus:outline-none
+                  ${isSelected
+                    ? 'border-yellow-400 bg-yellow-400/5 shadow-[0_0_16px_rgba(251,191,36,0.1)]'
+                    : 'border-gray-800 bg-gray-900 hover:border-gray-700'
+                  }
+                `}
+              >
+                {isSelected && (
+                  <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+                <div className="text-2xl mb-1.5">{card.emoji}</div>
+                <div className={`font-semibold text-sm mb-1 ${isSelected ? 'text-yellow-400' : 'text-white'}`}>
+                  {card.label}
+                </div>
+                <div className="text-xs text-gray-500 leading-snug">{card.description}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -233,8 +252,8 @@ export function AudienceSection({
 
       {/* Competencia directa */}
       <div className="field-group">
-        <Label className="label-text">Competencia directa *</Label>
-        <p className="helper-text">Marcas o personas con las que te comparan tus clientes.</p>
+        <Label className="label-text">¿Quién más ofrece algo similar a lo tuyo? *</Label>
+        <p className="helper-text">Personas, marcas o empresas con las que tus clientes te comparan o podrían comparar.</p>
         <div className="flex gap-2 mt-2">
           <Input
             value={newCompetidor}
@@ -274,7 +293,7 @@ export function AudienceSection({
       <div className="field-group">
         <div className="flex items-center justify-between">
           <Label htmlFor="ventajaCompetitiva" className="label-text">
-            Ventaja competitiva *
+            ¿Por qué te elegirían a ti? *
           </Label>
           {competenciaDirecta.length >= 1 && (
             <button
@@ -287,7 +306,7 @@ export function AudienceSection({
             </button>
           )}
         </div>
-        <p className="helper-text">¿Por qué alguien debería elegirte a ti sobre la competencia?</p>
+        <p className="helper-text">Explica qué hace que tu propuesta sea única. ¿Qué puedes hacer tú que los demás no pueden o no hacen?</p>
         <Textarea
           id="ventajaCompetitiva"
           className="mt-2 min-h-[80px]"
