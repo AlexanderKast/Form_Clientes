@@ -85,7 +85,7 @@ const FORM_DATA = {
     'No publicar precios directamente en redes sociales',
   ],
   nivelFormalidad: 3,
-  usoHumor: 'Si pero contextual. Humor colombiano seco y directo.',
+  usoHumor: 'Moderado',
   regionalismos: 'Parce, man, bacano, full, brutal. Colombianismos que no excluyen a otros paises LATAM.',
   temasSensibles:
     'Evitar comparaciones directas con competidores especificos. No hablar de politica ni religion.',
@@ -167,10 +167,10 @@ const FORM_DATA = {
 
 export default function SeedPage() {
   useEffect(() => {
-    sessionStorage.setItem('brand-intake-form', JSON.stringify(FORM_DATA));
-    sessionStorage.setItem('brand-intake-completed', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]));
-    const check = sessionStorage.getItem('brand-intake-form');
-    console.log('[SEED] Guardado en sessionStorage:', check ? 'OK (' + check.length + ' chars)' : 'FALLO');
+    localStorage.setItem('brand-intake-form', JSON.stringify(FORM_DATA));
+    localStorage.setItem('brand-intake-completed', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]));
+    const check = localStorage.getItem('brand-intake-form');
+    console.log('[SEED] Guardado en localStorage:', check ? 'OK (' + check.length + ' chars)' : 'FALLO');
   }, []);
 
   return (

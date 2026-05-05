@@ -86,7 +86,7 @@ const formData = {
     'No publicar precios directamente en redes sociales',
   ],
   nivelFormalidad: 3,
-  usoHumor: 'Si, pero contextual. Humor colombiano, seco y directo.',
+  usoHumor: 'Moderado',
   regionalismos:
     'Parce, man, bacano, full, brutal. Colombianismos naturales que no excluyen a otros paises LATAM.',
   temasSensibles:
@@ -176,8 +176,8 @@ export async function GET() {
   const completed = JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]);
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cargando datos de prueba...</title></head><body><script>
-sessionStorage.setItem('brand-intake-form', ${JSON.stringify(json)});
-sessionStorage.setItem('brand-intake-completed', ${JSON.stringify(completed)});
+localStorage.setItem('brand-intake-form', ${JSON.stringify(json)});
+localStorage.setItem('brand-intake-completed', ${JSON.stringify(completed)});
 window.location.href = '/form';
 <\/script><p style="font-family:sans-serif;padding:2rem">Cargando datos de prueba...</p></body></html>`;
 
