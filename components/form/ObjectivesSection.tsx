@@ -3,7 +3,14 @@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
+
+const TIEMPO_CARDS = [
+  { value: 3,  emoji: '⚡', label: '1–3 h',      description: 'Muy poco, lo hago entre otras cosas' },
+  { value: 7,  emoji: '🕐', label: '4–7 h',      description: 'Algunos ratos libres a la semana' },
+  { value: 15, emoji: '💪', label: '8–15 h',     description: 'Le dedico tiempo real cada semana' },
+  { value: 25, emoji: '🚀', label: '16–25 h',    description: 'Es una prioridad en mi agenda' },
+  { value: 40, emoji: '🔥', label: '26–40 h',    description: 'Prácticamente tiempo completo' },
+];
 
 const OBJETIVO_OPTIONS = [
   { id: 'awareness', label: 'Visibilidad',   description: 'Que más gente conozca tu marca y te descubra', emoji: '📢' },
@@ -147,24 +154,41 @@ export function ObjectivesSection({
       </div>
 
       {/* Tiempo por semana */}
-      <div className="p-5 rounded-xl bg-gray-950/50 border border-gray-800 space-y-4">
-        <div>
-          <Label className="label-text">
-            Tiempo disponible:{' '}
-            <span className="text-yellow-400">{tiempoPorSemana} horas/semana</span>
-          </Label>
-          <p className="helper-text">Cuánto tiempo real puedes dedicar al contenido.</p>
-        </div>
-        <Slider
-          value={[tiempoPorSemana]}
-          onValueChange={(vals) => onUpdate('tiempoPorSemana', Array.isArray(vals) ? vals[0] : (vals as unknown as number))}
-          min={1}
-          max={40}
-          step={1}
-        />
-        <div className="flex justify-between text-xs text-gray-600">
-          <span>1 hora</span>
-          <span>40 horas</span>
+      <div className="p-5 rounded-xl bg-gray-950/50 border border-gray-800 space-y-3">
+        <Label className="label-text">¿Cuánto tiempo puedes dedicarle por semana? *</Label>
+        <p className="helper-text">Esto define qué tan ambicioso puede ser el plan de contenido.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-1">
+          {TIEMPO_CARDS.map((card, idx) => {
+            const prevValue = idx === 0 ? 0 : TIEMPO_CARDS[idx - 1].value;
+            const isSelected = tiempoPorSemana > prevValue && tiempoPorSemana <= card.value;
+            return (
+              <button
+                key={card.value}
+                type="button"
+                onClick={() => onUpdate('tiempoPorSemana', card.value)}
+                className={`
+                  relative p-3 rounded-xl border-2 text-left transition-all hover:-translate-y-0.5 focus:outline-none
+                  ${isSelected
+                    ? 'border-yellow-400 bg-yellow-400/5 shadow-[0_0_12px_rgba(251,191,36,0.1)]'
+                    : 'border-gray-800 bg-gray-900 hover:border-gray-700'
+                  }
+                `}
+              >
+                {isSelected && (
+                  <div className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-yellow-400 flex items-center justify-center">
+                    <svg className="w-2 h-2 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+                <div className="text-xl mb-1">{card.emoji}</div>
+                <div className={`font-semibold text-xs mb-0.5 ${isSelected ? 'text-yellow-400' : 'text-white'}`}>
+                  {card.label}
+                </div>
+                <div className="text-[10px] text-gray-500 leading-snug">{card.description}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
