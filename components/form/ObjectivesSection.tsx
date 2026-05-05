@@ -4,13 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Card } from '@/components/ui/card';
 
 const OBJETIVO_OPTIONS = [
-  { id: 'awareness', label: 'Awareness', description: 'Dar a conocer la marca, alcance masivo', emoji: '📢' },
-  { id: 'leads', label: 'Generación de leads', description: 'Captar prospectos interesados', emoji: '🎯' },
-  { id: 'ventas', label: 'Ventas directas', description: 'Convertir seguidores en compradores', emoji: '💰' },
-  { id: 'comunidad', label: 'Comunidad', description: 'Construir una comunidad fiel y activa', emoji: '❤️' },
+  { id: 'awareness', label: 'Awareness',     description: 'Alcance masivo, dar a conocer la marca', emoji: '📢' },
+  { id: 'leads',     label: 'Leads',         description: 'Captar prospectos interesados',           emoji: '🎯' },
+  { id: 'ventas',    label: 'Ventas',        description: 'Convertir seguidores en compradores',     emoji: '💰' },
+  { id: 'comunidad', label: 'Comunidad',     description: 'Construir audiencia fiel y activa',       emoji: '❤️' },
 ] as const;
 
 const PLATAFORMAS = [
@@ -42,132 +41,172 @@ export function ObjectivesSection({
   onUpdate,
 }: ObjectivesSectionProps) {
   const togglePlataforma = (p: string) => {
-    if (plataformas.includes(p)) {
-      onUpdate('plataformas', plataformas.filter((x) => x !== p));
-    } else {
-      onUpdate('plataformas', [...plataformas, p]);
-    }
+    onUpdate(
+      'plataformas',
+      plataformas.includes(p) ? plataformas.filter((x) => x !== p) : [...plataformas, p]
+    );
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Objetivos y Recursos</h2>
-        <p className="mt-1 text-gray-600">Define qué quieres lograr y con qué recursos cuentas.</p>
+      {/* Objetivo principal */}
+      <div className="field-group">
+        <Label className="label-text">Objetivo principal *</Label>
+        <p className="helper-text">El norte que guía toda la estrategia de contenido.</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+          {OBJETIVO_OPTIONS.map((opt) => {
+            const isSelected = objetivoPrincipal === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onUpdate('objetivoPrincipal', opt.id)}
+                className={`
+                  relative p-4 rounded-xl border-2 text-left transition-all
+                  hover:-translate-y-0.5 focus:outline-none
+                  ${isSelected
+                    ? 'border-yellow-400 bg-yellow-400/5 shadow-[0_0_16px_rgba(251,191,36,0.1)]'
+                    : 'border-gray-800 bg-gray-950 hover:border-gray-700'
+                  }
+                `}
+              >
+                {isSelected && (
+                  <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+                <div className="text-2xl mb-2">{opt.emoji}</div>
+                <div className={`font-semibold text-sm mb-1 ${isSelected ? 'text-yellow-400' : 'text-white'}`}>
+                  {opt.label}
+                </div>
+                <div className="text-xs text-gray-500">{opt.description}</div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="space-y-5">
-        <div>
-          <Label>Objetivo principal *</Label>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-            {OBJETIVO_OPTIONS.map((opt) => (
-              <Card
-                key={opt.id}
-                onClick={() => onUpdate('objetivoPrincipal', opt.id)}
-                className={`p-4 cursor-pointer transition-all border-2 ${
-                  objetivoPrincipal === opt.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="text-2xl mb-1">{opt.emoji}</div>
-                <div className="font-semibold text-sm">{opt.label}</div>
-                <div className="text-xs text-gray-500 mt-1">{opt.description}</div>
-              </Card>
-            ))}
-          </div>
-        </div>
+      {/* KPI crítico */}
+      <div className="field-group">
+        <Label htmlFor="kpiCritico" className="label-text">KPI crítico *</Label>
+        <p className="helper-text">La métrica principal que medirá el éxito.</p>
+        <Input
+          id="kpiCritico"
+          className="mt-2"
+          value={kpiCritico}
+          onChange={(e) => onUpdate('kpiCritico', e.target.value)}
+          placeholder="Ej: 20 leads/mes / 5% tasa conversión / 1000 nuevos seguidores/mes"
+        />
+      </div>
 
-        <div>
-          <Label htmlFor="kpiCritico">KPI crítico *</Label>
-          <Input
-            id="kpiCritico"
-            className="mt-1"
-            value={kpiCritico}
-            onChange={(e) => onUpdate('kpiCritico', e.target.value)}
-            placeholder="Ej: Leads por mes / Tasa de conversión / Seguidores activos / Ventas mensuales"
-          />
-        </div>
+      {/* Frecuencia de contenido */}
+      <div className="field-group">
+        <Label htmlFor="frecuenciaContenido" className="label-text">Frecuencia de contenido *</Label>
+        <p className="helper-text">¿Con qué regularidad publicarás y en qué formatos?</p>
+        <Input
+          id="frecuenciaContenido"
+          className="mt-2"
+          value={frecuenciaContenido}
+          onChange={(e) => onUpdate('frecuenciaContenido', e.target.value)}
+          placeholder="Ej: 5 Reels/semana en Instagram + 1 video YouTube semanal"
+        />
+      </div>
 
-        <div>
-          <Label htmlFor="frecuenciaContenido">Frecuencia de contenido *</Label>
-          <Input
-            id="frecuenciaContenido"
-            className="mt-1"
-            value={frecuenciaContenido}
-            onChange={(e) => onUpdate('frecuenciaContenido', e.target.value)}
-            placeholder="Ej: 5 posts/semana en Instagram + 1 video YouTube semanal"
-          />
-        </div>
-
-        <div>
-          <Label>Plataformas *</Label>
-          <p className="text-xs text-gray-500 mt-1">Selecciona todas las que apliquen.</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-            {PLATAFORMAS.map((p) => (
+      {/* Plataformas */}
+      <div className="field-group">
+        <Label className="label-text">Plataformas *</Label>
+        <p className="helper-text">Selecciona todas las que apliquen.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
+          {PLATAFORMAS.map((p) => {
+            const isSelected = plataformas.includes(p);
+            return (
               <button
                 key={p}
                 type="button"
                 onClick={() => togglePlataforma(p)}
-                className={`px-3 py-2 rounded-lg border text-sm transition-all ${
-                  plataformas.includes(p)
-                    ? 'bg-blue-500 text-white border-blue-500'
-                    : 'border-gray-200 hover:border-blue-300'
-                }`}
+                className={`
+                  px-3 py-2 rounded-lg border text-sm font-medium transition-all
+                  ${isSelected
+                    ? 'border-yellow-400 bg-yellow-400/10 text-yellow-400'
+                    : 'border-gray-800 bg-gray-950 text-gray-400 hover:border-gray-700 hover:text-gray-300'
+                  }
+                `}
               >
                 {p}
               </button>
-            ))}
-          </div>
-          {plataformas.length === 0 && (
-            <p className="text-xs text-orange-600 mt-1">Selecciona al menos una plataforma</p>
-          )}
+            );
+          })}
         </div>
+        {plataformas.length === 0 && (
+          <p className="error-text">Selecciona al menos una plataforma</p>
+        )}
+      </div>
 
+      {/* Tiempo por semana */}
+      <div className="p-5 rounded-xl bg-gray-950/50 border border-gray-800 space-y-4">
         <div>
-          <Label>Tiempo disponible por semana: {tiempoPorSemana} horas</Label>
-          <Slider
-            value={[tiempoPorSemana]}
-            onValueChange={(vals) => onUpdate('tiempoPorSemana', (vals as number[])[0])}
-            min={1}
-            max={40}
-            step={1}
-            className="mt-3"
-          />
+          <Label className="label-text">
+            Tiempo disponible:{' '}
+            <span className="text-yellow-400">{tiempoPorSemana} horas/semana</span>
+          </Label>
+          <p className="helper-text">Cuánto tiempo real puedes dedicar al contenido.</p>
         </div>
+        <Slider
+          value={[tiempoPorSemana]}
+          onValueChange={(vals) => onUpdate('tiempoPorSemana', (vals as number[])[0])}
+          min={1}
+          max={40}
+          step={1}
+        />
+        <div className="flex justify-between text-xs text-gray-600">
+          <span>1 hora</span>
+          <span>40 horas</span>
+        </div>
+      </div>
 
-        <div>
-          <Label htmlFor="presupuesto">Presupuesto mensual para contenido (opcional)</Label>
+      {/* Grid: presupuesto + timeline */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="field-group">
+          <Label htmlFor="presupuesto" className="label-text">
+            Presupuesto mensual{' '}
+            <span className="font-normal text-gray-600">(opcional)</span>
+          </Label>
           <Input
             id="presupuesto"
-            className="mt-1"
+            className="mt-2"
             value={presupuesto}
             onChange={(e) => onUpdate('presupuesto', e.target.value)}
-            placeholder="Ej: $500 USD/mes / Sin presupuesto por ahora"
+            placeholder="Ej: $500 USD/mes"
           />
         </div>
 
-        <div>
-          <Label htmlFor="equipo">Equipo disponible (opcional)</Label>
-          <Textarea
-            id="equipo"
-            className="mt-1"
-            value={equipo}
-            onChange={(e) => onUpdate('equipo', e.target.value)}
-            placeholder="Ej: Solo yo por ahora / Tengo 1 community manager part-time / Equipo de 3 personas"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="timeline">Timeline / horizonte del proyecto *</Label>
+        <div className="field-group">
+          <Label htmlFor="timeline" className="label-text">Timeline *</Label>
           <Input
             id="timeline"
-            className="mt-1"
+            className="mt-2"
             value={timeline}
             onChange={(e) => onUpdate('timeline', e.target.value)}
-            placeholder="Ej: Resultados esperados en 90 días / Lanzamiento en junio 2026"
+            placeholder="Ej: Resultados en 90 días"
           />
         </div>
+      </div>
+
+      {/* Equipo */}
+      <div className="field-group">
+        <Label htmlFor="equipo" className="label-text">
+          Equipo disponible{' '}
+          <span className="font-normal text-gray-600">(opcional)</span>
+        </Label>
+        <Textarea
+          id="equipo"
+          className="mt-2"
+          value={equipo}
+          onChange={(e) => onUpdate('equipo', e.target.value)}
+          placeholder="Solo yo por ahora / Tengo 1 community manager part-time / Equipo de 3 personas"
+        />
       </div>
     </div>
   );

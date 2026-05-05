@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { Suspense } from 'react';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { FormSidebar } from '@/components/form/FormSidebar';
-import { ProgressBar } from '@/components/form/ProgressBar';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { TypeSelector } from '@/components/form/TypeSelector';
 import { IdentitySection } from '@/components/form/IdentitySection';
 import { AudienceSection } from '@/components/form/AudienceSection';
@@ -20,29 +18,20 @@ import { BrandType } from '@/types/brand';
 
 const TOTAL_STEPS = 8;
 
-const STEP_LABELS = [
-  'Tipo de Marca',
-  'Identidad',
-  'Audiencia',
-  'Propuesta de Valor',
-  'Voz y Tono',
-  'Pilares',
-  'Filosofia',
-  'Objetivos',
-  'Contexto',
+const STEPS = [
+  { label: 'Tipo',       subtitle: '¿Qué estructuraremos?' },
+  { label: 'Identidad',  subtitle: 'Quién eres y qué haces' },
+  { label: 'Audiencia',  subtitle: 'Para quién es tu marca' },
+  { label: 'Valor',      subtitle: 'Qué ofreces y prometes' },
+  { label: 'Voz',        subtitle: 'Cómo te comunicas' },
+  { label: 'Pilares',    subtitle: 'Temas de contenido' },
+  { label: 'Filosofía',  subtitle: 'Creencias y propósito' },
+  { label: 'Objetivos',  subtitle: 'Metas y métricas' },
+  { label: 'Contexto',   subtitle: 'Info adicional' },
 ];
 
-const STEP_DESCRIPTIONS = [
-  'Cuéntanos qué tipo de marca estamos construyendo.',
-  'Los datos fundamentales que identifican tu marca en el mercado.',
-  'A quién le hablas y qué problema real les resuelves.',
-  'Qué ofreces, cuánto vale y por qué vale ese precio.',
-  'El ADN comunicacional exacto de tu marca — cómo hablas.',
-  'Los temas de contenido que vas a crear y en qué proporción.',
-  'Los valores, creencias y propósito profundo de la marca.',
-  'Tus metas, plataformas y recursos disponibles.',
-  'Información adicional que afina el sistema.',
-];
+// Tiempo estimado por paso (minutos)
+const STEP_TIMES = [2, 4, 4, 3, 5, 3, 4, 3, 2];
 
 interface FormState {
   tipo: BrandType;
@@ -163,9 +152,7 @@ const DEFAULT_STATE: FormState = {
 function validateStep(step: number, data: FormState): string[] {
   const errors: string[] = [];
 
-  if (step === 0) {
-    // TypeSelector — always valid
-  } else if (step === 1) {
+  if (step === 1) {
     if (!data.nombreMarca || data.nombreMarca.length < 2) errors.push('Nombre de marca requerido');
     if (!data.industriaNicho || data.industriaNicho.length < 3) errors.push('Industria/nicho requerido');
     if (!data.expertiseDiferenciador || data.expertiseDiferenciador.length < 10) errors.push('Expertise requerido (mínimo 10 caracteres)');
@@ -178,8 +165,8 @@ function validateStep(step: number, data: FormState): string[] {
     if (data.objecionesPrincipales.length < 3) errors.push('Mínimo 3 objeciones principales');
     if (data.competenciaDirecta.length < 1) errors.push('Agrega al menos un competidor');
     if (!data.ventajaCompetitiva || data.ventajaCompetitiva.length < 20) errors.push('Ventaja competitiva requerida');
-    if (!data.costoNoActuar || data.costoNoActuar.length < 20) errors.push('Describe el costo de no actuar (mínimo 20 caracteres)');
-    if (!data.errorPrincipal || data.errorPrincipal.length < 20) errors.push('Describe el error principal del cliente (mínimo 20 caracteres)');
+    if (!data.costoNoActuar || data.costoNoActuar.length < 20) errors.push('Describe el costo de no actuar');
+    if (!data.errorPrincipal || data.errorPrincipal.length < 20) errors.push('Describe el error principal del cliente');
     if (!data.aQuienNoAyudo || data.aQuienNoAyudo.length < 10) errors.push('Define a quién no puedes ayudar');
   } else if (step === 3) {
     if (!data.queOfrece || data.queOfrece.length < 20) errors.push('Descripción de oferta requerida');
@@ -212,35 +199,20 @@ function validateStep(step: number, data: FormState): string[] {
   return errors;
 }
 
-function AutoSaveIndicator({ lastSaved }: { lastSaved: Date | null }) {
-  if (!lastSaved) return null;
-
-  const timeStr = lastSaved.toLocaleTimeString('es-CO', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
-  return (
-    <div className="flex items-center gap-1.5 text-xs text-stone-500">
-      <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-      Guardado a las {timeStr}
-    </div>
-  );
-}
-
 function FormContent() {
   const router = useRouter();
   const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>(() => {
     try {
-      const saved = sessionStorage.getItem('brand-intake-completed');
+      const saved = localStorage.getItem('brand-intake-completed');
       if (saved) return JSON.parse(saved) as number[];
     } catch {}
     return [];
   });
   const [formData, setFormData] = useState<FormState>(() => {
     try {
-      const saved = sessionStorage.getItem('brand-intake-form');
+      const saved = localStorage.getItem('brand-intake-form');
       if (saved) return { ...DEFAULT_STATE, ...JSON.parse(saved) };
     } catch {}
     return DEFAULT_STATE;
@@ -251,12 +223,12 @@ function FormContent() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   useEffect(() => {
-    sessionStorage.setItem('brand-intake-form', JSON.stringify(formData));
+    localStorage.setItem('brand-intake-form', JSON.stringify(formData));
     setLastSaved(new Date());
   }, [formData]);
 
   useEffect(() => {
-    sessionStorage.setItem('brand-intake-completed', JSON.stringify(completedSteps));
+    localStorage.setItem('brand-intake-completed', JSON.stringify(completedSteps));
   }, [completedSteps]);
 
   const update = useCallback((field: string, value: unknown) => {
@@ -272,12 +244,24 @@ function FormContent() {
     }
     setErrors([]);
     setCompletedSteps((prev) => prev.includes(step) ? prev : [...prev, step]);
+    setDirection(1);
     setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePrev = () => {
     setErrors([]);
+    setDirection(-1);
     setStep((s) => Math.max(s - 1, 0));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleStepClick = (idx: number) => {
+    if (completedSteps.includes(idx) || idx === 0 || completedSteps.includes(idx - 1)) {
+      setDirection(idx > step ? 1 : -1);
+      setErrors([]);
+      setStep(idx);
+    }
   };
 
   const handleSubmit = async () => {
@@ -310,6 +294,8 @@ function FormContent() {
 
       if (data.success) {
         sessionStorage.setItem('submit_result', JSON.stringify(data));
+        localStorage.removeItem('brand-intake-form');
+        localStorage.removeItem('brand-intake-completed');
         router.push('/thank-you');
       } else {
         setSubmitError(data.error || 'Error al enviar. Intenta de nuevo.');
@@ -321,242 +307,334 @@ function FormContent() {
     }
   };
 
+  const progress = ((step + 1) / (TOTAL_STEPS + 1)) * 100;
   const isLastStep = step === TOTAL_STEPS;
-  const motivationalMessages: Record<number, string> = {
-    5: 'Vas muy bien, ya pasaste la mitad.',
-    6: 'Casi terminamos — esta seccion es poderosa.',
-    7: 'Solo dos pasos mas.',
-    8: 'Ultimo paso — lo lograste.',
+  const remainingTime = STEP_TIMES.slice(step).reduce((a, b) => a + b, 0);
+  const timeStr = lastSaved
+    ? lastSaved.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+    : null;
+
+  const slideVariants = {
+    enter: (dir: number) => ({ x: dir > 0 ? 40 : -40, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0 }),
   };
 
   return (
-    <div className="min-h-screen flex" style={{ background: '#0A0A0B' }}>
-      {/* Sidebar — solo desktop */}
-      <div className="hidden md:flex">
-        <FormSidebar currentStep={step} completedSteps={completedSteps} />
-      </div>
-
-      {/* Contenido principal */}
-      <main className="flex-1 flex flex-col min-h-screen">
-        {/* Header mobile con logo + progreso */}
-        <div className="md:hidden px-4 pt-4 pb-3" style={{ background: '#0D0D0F', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="flex items-center mb-3">
-            <Image
-              src="/AC_Mesa de trabajo 1.png"
-              alt="Alexander Cast"
-              width={500}
-              height={500}
-              style={{ width: '110px', height: 'auto' }}
-              priority
-            />
-          </div>
-          <ProgressBar current={step} total={TOTAL_STEPS} completedSteps={completedSteps} />
-        </div>
-
-        <div className="flex-1 px-4 md:px-10 py-8 max-w-3xl w-full mx-auto">
-          {/* Header de la seccion */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <span
-                className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-bold"
-                style={{ background: 'rgba(212,160,23,0.15)', color: '#D4A017', border: '1px solid rgba(212,160,23,0.3)' }}
-              >
-                {step + 1}
-              </span>
-              <span className="text-xs font-medium uppercase tracking-wider" style={{ color: '#D4A017' }}>
-                Paso {step + 1} de {TOTAL_STEPS + 1}
-              </span>
+    <div className="min-h-screen bg-black">
+      {/* ── HEADER FIJO ── */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-md border-b border-gray-800">
+        <div className="px-4 md:px-8 py-3">
+          <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+            {/* Logo */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <Image
+                src="/AC_Mesa de trabajo 1.png"
+                alt="Alexander Cast"
+                width={500}
+                height={500}
+                style={{ width: '90px', height: 'auto' }}
+                priority
+              />
+              <div className="hidden sm:block">
+                <p className="text-xs font-semibold text-white leading-none">Brand Architect</p>
+                <p className="text-xs text-gray-500">Sistema de Marca</p>
+              </div>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white">{STEP_LABELS[step]}</h1>
-            <p className="mt-1 text-stone-400">{STEP_DESCRIPTIONS[step]}</p>
-            {motivationalMessages[step] && (
-              <p className="mt-2 text-xs font-medium" style={{ color: '#D4A017' }}>{motivationalMessages[step]}</p>
-            )}
-          </div>
 
-          {/* Card principal */}
-          <div className="rounded-2xl p-6 md:p-8" style={{ background: '#111113', border: '1px solid rgba(255,255,255,0.07)' }}>
-            {step === 0 && (
-              <TypeSelector
-                value={formData.tipo}
-                onChange={(v) => update('tipo', v)}
-              />
-            )}
-            {step === 1 && (
-              <IdentitySection
-                tipo={formData.tipo}
-                nombreMarca={formData.nombreMarca}
-                expertiseDiferenciador={formData.expertiseDiferenciador}
-                anosExperiencia={formData.anosExperiencia}
-                ubicacionGeografica={formData.ubicacionGeografica}
-                idiomas={formData.idiomas}
-                industriaNicho={formData.industriaNicho}
-                comoPierciben={formData.comoPierciben}
-                onUpdate={update}
-              />
-            )}
-            {step === 2 && (
-              <AudienceSection
-                perfilDemografico={formData.perfilDemografico}
-                problemaPrincipal={formData.problemaPrincipal}
-                resultadoDeseado={formData.resultadoDeseado}
-                nivelSofisticacion={formData.nivelSofisticacion}
-                objecionesPrincipales={formData.objecionesPrincipales}
-                competenciaDirecta={formData.competenciaDirecta}
-                ventajaCompetitiva={formData.ventajaCompetitiva}
-                costoNoActuar={formData.costoNoActuar}
-                errorPrincipal={formData.errorPrincipal}
-                aQuienNoAyudo={formData.aQuienNoAyudo}
-                onUpdate={update}
-              />
-            )}
-            {step === 3 && (
-              <ValueSection
-                queOfrece={formData.queOfrece}
-                promesaRealista={formData.promesaRealista}
-                precioInversion={formData.precioInversion}
-                formatoEntrega={formData.formatoEntrega}
-                garantia={formData.garantia}
-                noPromete={formData.noPromete}
-                resultadosClientes={formData.resultadosClientes}
-                onUpdate={update}
-              />
-            )}
-            {step === 4 && (
-              <VoiceSection
-                estiloComuncacional={formData.estiloComuncacional}
-                expresionesNaturales={formData.expresionesNaturales}
-                prohibiciones={formData.prohibiciones}
-                nivelFormalidad={formData.nivelFormalidad}
-                usoHumor={formData.usoHumor}
-                regionalismos={formData.regionalismos}
-                temasSensibles={formData.temasSensibles}
-                onUpdate={update}
-              />
-            )}
-            {step === 5 && (
-              <PillarsSection
-                pilares={formData.pilares}
-                mensajeCentral={formData.mensajeCentral}
-                onUpdate={update}
-              />
-            )}
-            {step === 6 && (
-              <PhilosophySection
-                creenciasFundamentales={formData.creenciasFundamentales}
-                queRechaza={formData.queRechaza}
-                limitesEticos={formData.limitesEticos}
-                propositoMarca={formData.propositoMarca}
-                historiaOrigen={formData.historiaOrigen}
-                historiaBatallas={formData.historiaBatallas}
-                historiaLogros={formData.historiaLogros}
-                onUpdate={update}
-              />
-            )}
-            {step === 7 && (
-              <ObjectivesSection
-                objetivoPrincipal={formData.objetivoPrincipal}
-                kpiCritico={formData.kpiCritico}
-                frecuenciaContenido={formData.frecuenciaContenido}
-                plataformas={formData.plataformas}
-                tiempoPorSemana={formData.tiempoPorSemana}
-                presupuesto={formData.presupuesto}
-                equipo={formData.equipo}
-                timeline={formData.timeline}
-                onUpdate={update}
-              />
-            )}
-            {step === 8 && (
-              <ContextSection
-                productosSecundarios={formData.productosSecundarios}
-                colaboraciones={formData.colaboraciones}
-                temporadasEventos={formData.temporadasEventos}
-                restricciones={formData.restricciones}
-                integracionesNecesarias={formData.integracionesNecesarias}
-                figurasReferencia={formData.figurasReferencia}
-                onUpdate={update}
-              />
-            )}
+            {/* Dots — paso actual */}
+            <div className="flex items-center gap-1.5 flex-1 justify-center">
+              {STEPS.map((s, i) => {
+                const done = completedSteps.includes(i);
+                const active = i === step;
+                const accessible = i === 0 || done || completedSteps.includes(i - 1);
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handleStepClick(i)}
+                    disabled={!accessible}
+                    aria-label={s.label}
+                    className={`
+                      rounded-full transition-all duration-300 flex-shrink-0
+                      ${active ? 'w-6 h-2.5 bg-yellow-400' : ''}
+                      ${!active && done ? 'w-2.5 h-2.5 bg-yellow-600' : ''}
+                      ${!active && !done ? 'w-2.5 h-2.5 bg-gray-700' : ''}
+                      ${accessible && !active ? 'hover:bg-yellow-500/60 cursor-pointer' : ''}
+                      ${!accessible ? 'cursor-not-allowed opacity-40' : ''}
+                    `}
+                  />
+                );
+              })}
+            </div>
 
-            {/* Errores de validacion */}
-            {errors.length > 0 && (
-              <div className="mt-6 p-4 rounded-xl" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
-                <p className="font-semibold text-red-400 text-sm mb-2">Corrige estos campos antes de continuar:</p>
-                <ul className="space-y-1">
-                  {errors.map((e, i) => (
-                    <li key={i} className="text-sm text-red-300 flex items-start gap-2">
-                      <span className="mt-0.5 flex-shrink-0">•</span>
-                      {e}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {submitError && (
-              <div className="mt-6 p-4 rounded-xl" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
-                <p className="text-sm text-red-300">{submitError}</p>
-              </div>
-            )}
-
-            {/* Navegacion */}
-            <div className="flex items-center justify-between mt-8 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handlePrev}
-                disabled={step === 0}
-                className="gap-2 border-stone-700 text-stone-300 hover:bg-white/5 bg-transparent"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
-                </svg>
-                Anterior
-              </Button>
-
-              <AutoSaveIndicator lastSaved={lastSaved} />
-
-              {!isLastStep ? (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:-translate-y-0.5"
-                  style={{ background: 'linear-gradient(135deg, #F2CB51, #D4A017)', color: '#0A0A0B', boxShadow: '0 4px 16px rgba(212,160,23,0.25)' }}
-                >
-                  Siguiente
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
-                  style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', boxShadow: '0 4px 16px rgba(34,197,94,0.2)' }}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Generando documentos...
-                    </>
-                  ) : (
-                    <>
-                      Enviar y generar documentos
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </>
-                  )}
-                </button>
+            {/* Progress % + auto-save */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-sm font-bold text-yellow-400 hidden sm:block">
+                {Math.round(progress)}%
+              </span>
+              {timeStr && (
+                <div className="hidden md:flex items-center gap-1.5 text-xs text-gray-500">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  {timeStr}
+                </div>
               )}
             </div>
           </div>
+
+          {/* Barra de progreso delgada */}
+          <div className="max-w-4xl mx-auto mt-2">
+            <div className="h-0.5 bg-gray-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* ── CONTENIDO PRINCIPAL ── */}
+      <main className="pt-24 pb-28 px-4 md:px-8">
+        <div className="max-w-3xl mx-auto">
+
+          {/* Step header */}
+          <div className="mb-6 mt-2">
+            <div className="flex items-center gap-3 mb-1">
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-md text-xs font-bold bg-yellow-400/10 text-yellow-400 border border-yellow-400/30">
+                {step + 1}
+              </span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-yellow-400">
+                Paso {step + 1} de {TOTAL_STEPS + 1}
+              </span>
+              <span className="text-xs text-gray-600 hidden sm:block">
+                · ~{remainingTime} min restantes
+              </span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">
+              {STEPS[step].label}
+            </h1>
+            <p className="text-gray-400 text-sm mt-0.5">{STEPS[step].subtitle}</p>
+          </div>
+
+          {/* Tarjeta con AnimatePresence */}
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={step}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="step-card"
+            >
+              {step === 0 && (
+                <TypeSelector value={formData.tipo} onChange={(v) => update('tipo', v)} />
+              )}
+              {step === 1 && (
+                <IdentitySection
+                  tipo={formData.tipo}
+                  nombreMarca={formData.nombreMarca}
+                  expertiseDiferenciador={formData.expertiseDiferenciador}
+                  anosExperiencia={formData.anosExperiencia}
+                  ubicacionGeografica={formData.ubicacionGeografica}
+                  idiomas={formData.idiomas}
+                  industriaNicho={formData.industriaNicho}
+                  comoPierciben={formData.comoPierciben}
+                  onUpdate={update}
+                />
+              )}
+              {step === 2 && (
+                <AudienceSection
+                  perfilDemografico={formData.perfilDemografico}
+                  problemaPrincipal={formData.problemaPrincipal}
+                  resultadoDeseado={formData.resultadoDeseado}
+                  nivelSofisticacion={formData.nivelSofisticacion}
+                  objecionesPrincipales={formData.objecionesPrincipales}
+                  competenciaDirecta={formData.competenciaDirecta}
+                  ventajaCompetitiva={formData.ventajaCompetitiva}
+                  costoNoActuar={formData.costoNoActuar}
+                  errorPrincipal={formData.errorPrincipal}
+                  aQuienNoAyudo={formData.aQuienNoAyudo}
+                  onUpdate={update}
+                />
+              )}
+              {step === 3 && (
+                <ValueSection
+                  queOfrece={formData.queOfrece}
+                  promesaRealista={formData.promesaRealista}
+                  precioInversion={formData.precioInversion}
+                  formatoEntrega={formData.formatoEntrega}
+                  garantia={formData.garantia}
+                  noPromete={formData.noPromete}
+                  resultadosClientes={formData.resultadosClientes}
+                  onUpdate={update}
+                />
+              )}
+              {step === 4 && (
+                <VoiceSection
+                  estiloComuncacional={formData.estiloComuncacional}
+                  expresionesNaturales={formData.expresionesNaturales}
+                  prohibiciones={formData.prohibiciones}
+                  nivelFormalidad={formData.nivelFormalidad}
+                  usoHumor={formData.usoHumor}
+                  regionalismos={formData.regionalismos}
+                  temasSensibles={formData.temasSensibles}
+                  onUpdate={update}
+                />
+              )}
+              {step === 5 && (
+                <PillarsSection
+                  pilares={formData.pilares}
+                  mensajeCentral={formData.mensajeCentral}
+                  onUpdate={update}
+                />
+              )}
+              {step === 6 && (
+                <PhilosophySection
+                  creenciasFundamentales={formData.creenciasFundamentales}
+                  queRechaza={formData.queRechaza}
+                  limitesEticos={formData.limitesEticos}
+                  propositoMarca={formData.propositoMarca}
+                  historiaOrigen={formData.historiaOrigen}
+                  historiaBatallas={formData.historiaBatallas}
+                  historiaLogros={formData.historiaLogros}
+                  onUpdate={update}
+                />
+              )}
+              {step === 7 && (
+                <ObjectivesSection
+                  objetivoPrincipal={formData.objetivoPrincipal}
+                  kpiCritico={formData.kpiCritico}
+                  frecuenciaContenido={formData.frecuenciaContenido}
+                  plataformas={formData.plataformas}
+                  tiempoPorSemana={formData.tiempoPorSemana}
+                  presupuesto={formData.presupuesto}
+                  equipo={formData.equipo}
+                  timeline={formData.timeline}
+                  onUpdate={update}
+                />
+              )}
+              {step === 8 && (
+                <ContextSection
+                  productosSecundarios={formData.productosSecundarios}
+                  colaboraciones={formData.colaboraciones}
+                  temporadasEventos={formData.temporadasEventos}
+                  restricciones={formData.restricciones}
+                  integracionesNecesarias={formData.integracionesNecesarias}
+                  figurasReferencia={formData.figurasReferencia}
+                  onUpdate={update}
+                />
+              )}
+
+              {/* Errores de validación */}
+              {errors.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30"
+                >
+                  <p className="text-sm font-semibold text-red-400 mb-2">
+                    Corrige estos campos antes de continuar:
+                  </p>
+                  <ul className="space-y-1">
+                    {errors.map((e, i) => (
+                      <li key={i} className="text-sm text-red-300 flex items-start gap-2">
+                        <span className="mt-0.5 flex-shrink-0 text-red-500">•</span>
+                        {e}
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              )}
+
+              {submitError && (
+                <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/30">
+                  <p className="text-sm text-red-300">{submitError}</p>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
+
+      {/* ── FOOTER FIJO ── */}
+      <footer className="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-md border-t border-gray-800">
+        <div className="px-4 md:px-8 py-3">
+          <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+            {/* Anterior */}
+            <button
+              type="button"
+              onClick={handlePrev}
+              disabled={step === 0}
+              className="
+                inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
+                border border-gray-700 text-gray-300 bg-transparent
+                hover:bg-gray-800 hover:border-gray-600 hover:text-white
+                disabled:opacity-30 disabled:cursor-not-allowed
+                transition-all
+              "
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Anterior</span>
+            </button>
+
+            {/* Info central */}
+            <div className="text-center">
+              <p className="text-xs font-medium text-white">
+                {STEPS[step].label}
+              </p>
+              <p className="text-xs text-gray-600">
+                {step + 1} / {TOTAL_STEPS + 1}
+              </p>
+            </div>
+
+            {/* Siguiente / Enviar */}
+            {!isLastStep ? (
+              <button
+                type="button"
+                onClick={handleNext}
+                className="
+                  inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
+                  bg-yellow-400 text-black
+                  hover:bg-yellow-300 active:bg-yellow-500
+                  transition-all hover:-translate-y-0.5
+                  shadow-[0_4px_20px_rgba(251,191,36,0.3)]
+                "
+              >
+                <span>Siguiente</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="
+                  inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
+                  bg-gradient-to-r from-yellow-400 to-yellow-600 text-black
+                  hover:from-yellow-300 hover:to-yellow-500
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  transition-all hover:-translate-y-0.5
+                  shadow-[0_4px_20px_rgba(251,191,36,0.3)]
+                "
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Enviar y generar</span>
+                    <CheckCircle2 className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -565,8 +643,11 @@ export default function FormPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center" style={{ background: '#0A0A0B' }}>
-          <div className="text-stone-500 text-sm">Cargando...</div>
+        <div className="min-h-screen flex items-center justify-center bg-black">
+          <div className="flex items-center gap-3 text-gray-500">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="text-sm">Cargando...</span>
+          </div>
         </div>
       }
     >

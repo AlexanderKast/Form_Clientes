@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -22,64 +23,27 @@ interface VoiceSectionProps {
 
 type InputMode = 'single' | 'bulk';
 
-function ChipList({
-  items,
-  onRemove,
-  colorClass,
-}: {
-  items: string[];
-  onRemove: (i: number) => void;
-  colorClass: string;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2 mt-3">
-      {items.map((item, i) => (
-        <span
-          key={i}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${colorClass}`}
-        >
-          {item}
-          <button
-            type="button"
-            onClick={() => onRemove(i)}
-            aria-label={`Eliminar "${item}"`}
-            className="opacity-60 hover:opacity-100 transition-opacity"
-          >
-            <X className="w-3 h-3" />
-          </button>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function ProgressCounter({
-  current,
-  min,
-  label,
-}: {
-  current: number;
-  min: number;
-  label: string;
-}) {
+function ProgressCounter({ current, min, label }: { current: number; min: number; label: string }) {
   const pct = Math.min((current / min) * 100, 100);
   const isDone = current >= min;
 
   return (
     <div className="space-y-1.5 mb-3">
       <div className="flex items-center justify-between">
-        <span className={`text-sm font-semibold ${isDone ? 'text-green-700' : 'text-orange-600'}`}>
+        <span className={`text-sm font-semibold ${isDone ? 'text-green-400' : 'text-yellow-400'}`}>
           {current}/{min} {label}
         </span>
         {isDone ? (
-          <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Completo</span>
+          <span className="text-xs font-medium text-green-400 bg-green-400/10 border border-green-400/30 px-2 py-0.5 rounded-full">
+            Completo
+          </span>
         ) : (
-          <span className="text-xs text-slate-500">Faltan {min - current}</span>
+          <span className="text-xs text-gray-500">Faltan {min - current}</span>
         )}
       </div>
-      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-300 ${isDone ? 'bg-green-500' : 'bg-orange-400'}`}
+          className={`h-full rounded-full transition-all duration-300 ${isDone ? 'bg-green-400' : 'bg-yellow-400'}`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -87,13 +51,7 @@ function ProgressCounter({
   );
 }
 
-function BulkInputPanel({
-  placeholder,
-  onAdd,
-}: {
-  placeholder: string;
-  onAdd: (items: string[]) => void;
-}) {
+function BulkInputPanel({ placeholder, onAdd }: { placeholder: string; onAdd: (items: string[]) => void }) {
   const [text, setText] = useState('');
 
   const handleAdd = () => {
@@ -101,7 +59,6 @@ function BulkInputPanel({
       .split(/[\n,]+/)
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
-
     if (lines.length > 0) {
       onAdd(lines);
       setText('');
@@ -114,19 +71,63 @@ function BulkInputPanel({
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={placeholder}
-        className="min-h-[100px] text-sm"
+        className="min-h-[90px] text-sm"
       />
-      <p className="text-xs text-slate-400">Separa cada expresion con Enter o coma.</p>
+      <p className="text-xs text-gray-600">Separa cada expresión con Enter o coma.</p>
       <Button
         type="button"
         variant="outline"
         onClick={handleAdd}
         disabled={!text.trim()}
-        className="w-full text-sm"
+        className="w-full text-sm border-gray-700 text-gray-300 hover:bg-gray-800"
       >
         <Plus className="w-4 h-4 mr-1.5" />
         Agregar todas
       </Button>
+    </div>
+  );
+}
+
+function ItemList({
+  items,
+  onRemove,
+  variant,
+}: {
+  items: string[];
+  onRemove: (i: number) => void;
+  variant: 'green' | 'red';
+}) {
+  const numColor = variant === 'green' ? 'text-green-400' : 'text-red-400';
+  const itemBg = variant === 'green'
+    ? 'bg-green-400/5 border-green-400/20'
+    : 'bg-red-400/5 border-red-400/20';
+
+  return (
+    <div className="space-y-1.5 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+      <AnimatePresence initial={false}>
+        {items.map((item, i) => (
+          <motion.div
+            key={item + i}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, x: -20, height: 0 }}
+            transition={{ duration: 0.15 }}
+            className={`flex items-start gap-2.5 p-2.5 border rounded-lg group ${itemBg}`}
+          >
+            <span className={`text-xs font-mono mt-0.5 flex-shrink-0 ${numColor}`}>
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <p className="flex-1 text-sm text-gray-200 leading-relaxed">&ldquo;{item}&rdquo;</p>
+            <button
+              type="button"
+              onClick={() => onRemove(i)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 flex-shrink-0 mt-0.5"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 }
@@ -154,11 +155,6 @@ export function VoiceSection({
     }
   };
 
-  const addExpresionBulk = (items: string[]) => {
-    const unique = items.filter((item) => !expresionesNaturales.includes(item));
-    onUpdate('expresionesNaturales', [...expresionesNaturales, ...unique]);
-  };
-
   const addProhibicion = () => {
     const v = newProhibicion.trim();
     if (v) {
@@ -167,52 +163,45 @@ export function VoiceSection({
     }
   };
 
-  const addProhibicionBulk = (items: string[]) => {
-    const unique = items.filter((item) => !prohibiciones.includes(item));
-    onUpdate('prohibiciones', [...prohibiciones, ...unique]);
+  const addBulkExpresiones = (items: string[]) => {
+    onUpdate('expresionesNaturales', [...expresionesNaturales, ...items.filter((i) => !expresionesNaturales.includes(i))]);
   };
 
-  const removeExpresion = (i: number) => {
-    onUpdate('expresionesNaturales', expresionesNaturales.filter((_, j) => j !== i));
-  };
-
-  const removeProhibicion = (i: number) => {
-    onUpdate('prohibiciones', prohibiciones.filter((_, j) => j !== i));
+  const addBulkProhibiciones = (items: string[]) => {
+    onUpdate('prohibiciones', [...prohibiciones, ...items.filter((i) => !prohibiciones.includes(i))]);
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900">Voz y Tono</h2>
-        <p className="mt-1 text-slate-500">
-          Esta seccion captura el ADN comunicacional de tu marca. Tomatelo con calma — es la mas importante.
-        </p>
-      </div>
+    <div className="space-y-7">
+      <p className="text-sm text-gray-400">
+        El ADN comunicacional de tu marca. Esta es la sección más importante — tómatela con calma.
+      </p>
 
       {/* Estilo comunicacional */}
-      <div className="space-y-2">
-        <Label htmlFor="estiloComuncacional" className="text-sm font-semibold text-slate-700">
+      <div className="field-group">
+        <Label htmlFor="estiloComuncacional" className="label-text">
           Estilo comunicacional *
         </Label>
-        <p className="text-xs text-slate-400">
-          Describe con tus palabras como habla tu marca: tono, actitud, referencias, metaforas que usas.
+        <p className="helper-text">
+          Describe cómo habla tu marca: tono, actitud, referencias, metáforas que usas.
         </p>
         <Textarea
           id="estiloComuncacional"
-          className="min-h-[90px]"
+          className="mt-2 min-h-[90px]"
           value={estiloComuncacional}
           onChange={(e) => onUpdate('estiloComuncacional', e.target.value)}
-          placeholder="Ej: Cercano y directo, como un amigo experto que te habla sin rodeos. Usa metaforas del mundo real. Jamas condescendiente."
+          placeholder="Cercano y directo, como un amigo experto que te habla sin rodeos. Usa metáforas del mundo real. Jamás condescendiente..."
         />
       </div>
 
-      {/* Formalidad y humor */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label className="text-sm font-semibold text-slate-700">
-            Nivel de formalidad: {nivelFormalidad}/10
+      {/* Grid: formalidad + humor */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="p-4 rounded-xl bg-gray-950/50 border border-gray-800 space-y-3">
+          <Label className="label-text">
+            Formalidad:{' '}
+            <span className="text-yellow-400">{nivelFormalidad}/10</span>
           </Label>
-          <p className="text-xs text-slate-400">1 = muy informal &nbsp;/&nbsp; 10 = muy formal</p>
+          <p className="helper-text">1 = muy informal · 10 = muy formal</p>
           <Slider
             value={[nivelFormalidad]}
             onValueChange={(vals) => onUpdate('nivelFormalidad', (vals as number[])[0])}
@@ -220,17 +209,17 @@ export function VoiceSection({
             max={10}
             step={1}
           />
-          <div className="flex justify-between text-xs text-slate-400">
+          <div className="flex justify-between text-xs text-gray-600">
             <span>Informal</span>
             <span>Formal</span>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-sm font-semibold text-slate-700">Uso del humor *</Label>
-          <p className="text-xs text-slate-400">Con que frecuencia aparece el humor en tu comunicacion.</p>
+        <div className="field-group">
+          <Label className="label-text">Uso del humor *</Label>
+          <p className="helper-text">¿Con qué frecuencia aparece el humor?</p>
           <Select value={usoHumor} onValueChange={(v) => onUpdate('usoHumor', v)}>
-            <SelectTrigger>
+            <SelectTrigger className="mt-2">
               <SelectValue placeholder="Selecciona..." />
             </SelectTrigger>
             <SelectContent>
@@ -244,29 +233,25 @@ export function VoiceSection({
       </div>
 
       {/* Expresiones naturales */}
-      <div className="space-y-3 p-5 bg-slate-50 rounded-xl border border-slate-200">
+      <div className="p-5 rounded-xl bg-gray-950/50 border border-gray-800 space-y-4">
         <div>
-          <Label className="text-sm font-semibold text-slate-700">Expresiones naturales *</Label>
-          <p className="text-xs text-slate-500 mt-1">
-            Frases que tu marca USA frecuentemente. Piensa en como hablas con tus clientes.
+          <Label className="label-text">Expresiones naturales *</Label>
+          <p className="helper-text">
+            Frases que tu marca USA frecuentemente. Piensa en cómo hablas con tus clientes.
           </p>
         </div>
 
-        <ProgressCounter
-          current={expresionesNaturales.length}
-          min={15}
-          label="expresiones minimo"
-        />
+        <ProgressCounter current={expresionesNaturales.length} min={15} label="expresiones mínimo" />
 
-        {/* Toggle de modo */}
-        <div className="flex rounded-lg border border-slate-200 overflow-hidden bg-white text-sm w-fit">
+        {/* Toggle modo */}
+        <div className="flex rounded-lg border border-gray-800 overflow-hidden bg-gray-900 text-sm w-fit">
           <button
             type="button"
             onClick={() => setExpresionMode('single')}
-            className={`px-3 py-1.5 font-medium transition-colors ${
+            className={`px-4 py-1.5 font-medium transition-colors ${
               expresionMode === 'single'
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'bg-yellow-400 text-black'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
             }`}
           >
             Una por una
@@ -274,10 +259,10 @@ export function VoiceSection({
           <button
             type="button"
             onClick={() => setExpresionMode('bulk')}
-            className={`px-3 py-1.5 font-medium transition-colors ${
+            className={`px-4 py-1.5 font-medium transition-colors ${
               expresionMode === 'bulk'
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'bg-yellow-400 text-black'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
             }`}
           >
             Pegar varias
@@ -290,53 +275,55 @@ export function VoiceSection({
               value={newExpresion}
               onChange={(e) => setNewExpresion(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addExpresion())}
-              placeholder='Ej: "Dale pues" / "Parce, escuchame" / "Aqui te lo explico"'
+              placeholder='"Dale pues" / "Parce, escúchame" / "Aquí te lo explico"'
               className="flex-1"
             />
-            <Button type="button" variant="outline" onClick={addExpresion} aria-label="Agregar expresion">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addExpresion}
+              aria-label="Agregar expresión"
+              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+            >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
         ) : (
           <BulkInputPanel
-            placeholder={'Pega aqui tus expresiones:\nDale pues\nParce, escuchame\nVamos que se puede\n"Lo que nadie te cuenta..."'}
-            onAdd={addExpresionBulk}
+            placeholder={'Pega aquí tus expresiones:\nDale pues\nParce, escúchame\nVamos que se puede'}
+            onAdd={addBulkExpresiones}
           />
         )}
 
         {expresionesNaturales.length > 0 && (
-          <ChipList
+          <ItemList
             items={expresionesNaturales}
-            onRemove={removeExpresion}
-            colorClass="bg-green-100 text-green-800"
+            onRemove={(i) => onUpdate('expresionesNaturales', expresionesNaturales.filter((_, j) => j !== i))}
+            variant="green"
           />
         )}
       </div>
 
       {/* Prohibiciones */}
-      <div className="space-y-3 p-5 bg-slate-50 rounded-xl border border-slate-200">
+      <div className="p-5 rounded-xl bg-gray-950/50 border border-gray-800 space-y-4">
         <div>
-          <Label className="text-sm font-semibold text-slate-700">Prohibiciones absolutas *</Label>
-          <p className="text-xs text-slate-500 mt-1">
-            Frases, terminos o actitudes que la marca NUNCA usaria bajo ningun contexto.
+          <Label className="label-text">Prohibiciones absolutas *</Label>
+          <p className="helper-text">
+            Frases, términos o actitudes que la marca NUNCA usaría bajo ningún contexto.
           </p>
         </div>
 
-        <ProgressCounter
-          current={prohibiciones.length}
-          min={10}
-          label="prohibiciones minimo"
-        />
+        <ProgressCounter current={prohibiciones.length} min={10} label="prohibiciones mínimo" />
 
-        {/* Toggle de modo */}
-        <div className="flex rounded-lg border border-slate-200 overflow-hidden bg-white text-sm w-fit">
+        {/* Toggle modo */}
+        <div className="flex rounded-lg border border-gray-800 overflow-hidden bg-gray-900 text-sm w-fit">
           <button
             type="button"
             onClick={() => setProhibicionMode('single')}
-            className={`px-3 py-1.5 font-medium transition-colors ${
+            className={`px-4 py-1.5 font-medium transition-colors ${
               prohibicionMode === 'single'
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'bg-yellow-400 text-black'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
             }`}
           >
             Una por una
@@ -344,10 +331,10 @@ export function VoiceSection({
           <button
             type="button"
             onClick={() => setProhibicionMode('bulk')}
-            className={`px-3 py-1.5 font-medium transition-colors ${
+            className={`px-4 py-1.5 font-medium transition-colors ${
               prohibicionMode === 'bulk'
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'bg-yellow-400 text-black'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
             }`}
           >
             Pegar varias
@@ -360,58 +347,64 @@ export function VoiceSection({
               value={newProhibicion}
               onChange={(e) => setNewProhibicion(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addProhibicion())}
-              placeholder='Ej: "crack" / "gurú" / jerga vulgar / prometer resultados garantizados'
+              placeholder='"crack" / "gurú" / jerga vulgar / resultados garantizados'
               className="flex-1"
             />
-            <Button type="button" variant="outline" onClick={addProhibicion} aria-label="Agregar prohibicion">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addProhibicion}
+              aria-label="Agregar prohibición"
+              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+            >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
         ) : (
           <BulkInputPanel
-            placeholder={'Pega aqui tus prohibiciones:\nGurú\nCrack\nHacerse rico rapido\nResultados garantizados'}
-            onAdd={addProhibicionBulk}
+            placeholder={'Pega aquí tus prohibiciones:\nGurú\nCrack\nHacerse rico rápido'}
+            onAdd={addBulkProhibiciones}
           />
         )}
 
         {prohibiciones.length > 0 && (
-          <ChipList
+          <ItemList
             items={prohibiciones}
-            onRemove={removeProhibicion}
-            colorClass="bg-red-100 text-red-800"
+            onRemove={(i) => onUpdate('prohibiciones', prohibiciones.filter((_, j) => j !== i))}
+            variant="red"
           />
         )}
       </div>
 
       {/* Regionalismos */}
-      <div className="space-y-2">
-        <Label htmlFor="regionalismos" className="text-sm font-semibold text-slate-700">
-          Regionalismos o slang <span className="font-normal text-slate-400">(opcional)</span>
+      <div className="field-group">
+        <Label htmlFor="regionalismos" className="label-text">
+          Regionalismos o slang{' '}
+          <span className="font-normal text-gray-600">(opcional)</span>
         </Label>
-        <p className="text-xs text-slate-400">
-          Terminos locales que usa tu audiencia. Ayuda a calibrar el tono geografico del sistema.
-        </p>
+        <p className="helper-text">Términos locales que usa tu audiencia para calibrar el tono geográfico.</p>
         <Textarea
           id="regionalismos"
+          className="mt-2"
           value={regionalismos}
           onChange={(e) => onUpdate('regionalismos', e.target.value)}
-          placeholder="Ej: Usa terminos colombianos como 'bacano', 'parce'. Evita regionalismos de Espana."
+          placeholder='Usa términos colombianos como "bacano", "parce". Evita regionalismos de España.'
         />
       </div>
 
       {/* Temas sensibles */}
-      <div className="space-y-2">
-        <Label htmlFor="temasSensibles" className="text-sm font-semibold text-slate-700">
-          Temas sensibles a manejar con cuidado <span className="font-normal text-slate-400">(opcional)</span>
+      <div className="field-group">
+        <Label htmlFor="temasSensibles" className="label-text">
+          Temas sensibles a manejar con cuidado{' '}
+          <span className="font-normal text-gray-600">(opcional)</span>
         </Label>
-        <p className="text-xs text-slate-400">
-          Temas que la marca puede tocar pero con mucha delicadeza — el sistema sabrá cómo tratarlos.
-        </p>
+        <p className="helper-text">Temas que la marca puede tocar pero con mucha delicadeza.</p>
         <Textarea
           id="temasSensibles"
+          className="mt-2"
           value={temasSensibles}
           onChange={(e) => onUpdate('temasSensibles', e.target.value)}
-          placeholder="Ej: Politica, religion, comparaciones directas con competidores nombrados..."
+          placeholder="Política, religión, comparaciones directas con competidores nombrados..."
         />
       </div>
     </div>

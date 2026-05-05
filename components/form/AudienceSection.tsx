@@ -65,168 +65,230 @@ export function AudienceSection({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Audiencia Objetivo</h2>
-        <p className="mt-1 text-gray-600">Define quién es tu cliente ideal y qué necesita.</p>
+      {/* Perfil demográfico */}
+      <div className="field-group">
+        <Label htmlFor="perfilDemografico" className="label-text">
+          Perfil demográfico detallado *
+        </Label>
+        <p className="helper-text">Edad, género, ocupación, nivel de ingresos, ubicación, intereses...</p>
+        <Textarea
+          id="perfilDemografico"
+          className="mt-2 min-h-[100px]"
+          value={perfilDemografico}
+          onChange={(e) => onUpdate('perfilDemografico', e.target.value)}
+          placeholder="Hombres y mujeres de 28-45 años, emprendedores o freelancers con ingresos variables, viven en ciudades medianas o grandes de LATAM..."
+        />
       </div>
 
-      <div className="space-y-5">
-        <div>
-          <Label htmlFor="perfilDemografico">Perfil demográfico detallado *</Label>
-          <Textarea
-            id="perfilDemografico"
-            className="mt-1 min-h-[100px]"
-            value={perfilDemografico}
-            onChange={(e) => onUpdate('perfilDemografico', e.target.value)}
-            placeholder="Edad, género, ocupación, nivel de ingresos, ubicación, intereses, comportamientos..."
-          />
-        </div>
+      {/* Problema principal */}
+      <div className="field-group">
+        <Label htmlFor="problemaPrincipal" className="label-text">
+          Problema principal que resuelves *
+        </Label>
+        <p className="helper-text">¿Cuál es el dolor más grande de tu audiencia que tú resuelves?</p>
+        <Textarea
+          id="problemaPrincipal"
+          className="mt-2 min-h-[80px]"
+          value={problemaPrincipal}
+          onChange={(e) => onUpdate('problemaPrincipal', e.target.value)}
+          placeholder="No saben cómo atraer clientes de forma consistente sin depender de referidos o de pagar ads costosos..."
+        />
+      </div>
 
-        <div>
-          <Label htmlFor="problemaPrincipal">Problema principal que resuelves *</Label>
-          <Textarea
-            id="problemaPrincipal"
-            className="mt-1 min-h-[80px]"
-            value={problemaPrincipal}
-            onChange={(e) => onUpdate('problemaPrincipal', e.target.value)}
-            placeholder="¿Cuál es el dolor más grande de tu audiencia que tú resuelves?"
-          />
-        </div>
+      {/* Resultado deseado */}
+      <div className="field-group">
+        <Label htmlFor="resultadoDeseado" className="label-text">
+          Resultado deseado por tu audiencia *
+        </Label>
+        <p className="helper-text">¿Qué quieren lograr? ¿Cómo quieren sentirse después de trabajar contigo?</p>
+        <Textarea
+          id="resultadoDeseado"
+          className="mt-2 min-h-[80px]"
+          value={resultadoDeseado}
+          onChange={(e) => onUpdate('resultadoDeseado', e.target.value)}
+          placeholder="Tener un sistema de contenido que trabaje por ellos, genere leads calificados y les permita escalar sin quemarse..."
+        />
+      </div>
 
+      {/* Nivel de sofisticación */}
+      <div className="p-5 rounded-xl bg-gray-950/50 border border-gray-800 space-y-4">
         <div>
-          <Label htmlFor="resultadoDeseado">Resultado deseado por tu audiencia *</Label>
-          <Textarea
-            id="resultadoDeseado"
-            className="mt-1 min-h-[80px]"
-            value={resultadoDeseado}
-            onChange={(e) => onUpdate('resultadoDeseado', e.target.value)}
-            placeholder="¿Qué quieren lograr? ¿Cómo quieren sentirse o verse después de trabajar contigo?"
-          />
+          <Label className="label-text">
+            Nivel de sofisticación:{' '}
+            <span className="text-yellow-400">{SOFISTICACION_LABELS[nivelSofisticacion]}</span>
+          </Label>
+          <p className="helper-text">0 = nunca ha oído hablar del tema · 5 = experto que ya conoce todo</p>
         </div>
-
-        <div>
-          <Label>Nivel de sofisticación de tu audiencia: {SOFISTICACION_LABELS[nivelSofisticacion]}</Label>
-          <p className="text-xs text-gray-500 mt-1 mb-3">
-            0 = nunca ha oído hablar del tema, 5 = experto que ya conoce todo
-          </p>
-          <Slider
-            value={[nivelSofisticacion]}
-            onValueChange={(vals) => onUpdate('nivelSofisticacion', (vals as number[])[0])}
-            min={0}
-            max={5}
-            step={1}
-            className="w-full"
-          />
+        <Slider
+          value={[nivelSofisticacion]}
+          onValueChange={(vals) => onUpdate('nivelSofisticacion', (vals as number[])[0])}
+          min={0}
+          max={5}
+          step={1}
+        />
+        <div className="flex justify-between text-xs text-gray-600">
+          <span>Principiante</span>
+          <span>Experto</span>
         </div>
+      </div>
 
-        <div>
-          <Label>Objeciones principales (mínimo 3, máximo 5) — {objecionesPrincipales.length}/5</Label>
-          <p className="text-xs text-gray-500 mt-1">¿Por qué razones dudan o no compran?</p>
-          {objecionesPrincipales.length < 5 && (
-            <div className="flex gap-2 mt-2">
-              <Input
-                value={newObjecion}
-                onChange={(e) => setNewObjecion(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addObjecion())}
-                placeholder='Ej: "Es muy caro"'
-              />
-              <Button type="button" variant="outline" onClick={addObjecion}>
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-          <div className="space-y-2 mt-2">
+      {/* Objeciones */}
+      <div className="field-group">
+        <Label className="label-text">
+          Objeciones principales *
+          <span className="ml-2 text-xs font-normal text-gray-500">{objecionesPrincipales.length}/5</span>
+        </Label>
+        <p className="helper-text">¿Por qué razones dudan o no compran? (mínimo 3, máximo 5)</p>
+
+        {objecionesPrincipales.length < 5 && (
+          <div className="flex gap-2 mt-2">
+            <Input
+              value={newObjecion}
+              onChange={(e) => setNewObjecion(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addObjecion())}
+              placeholder='Ej: "Es muy caro para lo que ofrece"'
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addObjecion}
+              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+
+        {objecionesPrincipales.length > 0 && (
+          <div className="space-y-2 mt-3">
             {objecionesPrincipales.map((o, i) => (
-              <div key={i} className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded">
-                <span className="flex-1 text-sm">{i + 1}. {o}</span>
-                <button onClick={() => onUpdate('objecionesPrincipales', objecionesPrincipales.filter((_, j) => j !== i))}>
-                  <X className="w-4 h-4 text-gray-400 hover:text-red-500" />
+              <div
+                key={i}
+                className="flex items-center gap-3 p-3 bg-gray-900 border border-gray-800 rounded-lg group"
+              >
+                <span className="text-xs font-mono text-yellow-400 flex-shrink-0">{i + 1}</span>
+                <span className="flex-1 text-sm text-gray-200">{o}</span>
+                <button
+                  type="button"
+                  onClick={() => onUpdate('objecionesPrincipales', objecionesPrincipales.filter((_, j) => j !== i))}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300"
+                >
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             ))}
           </div>
-          {objecionesPrincipales.length < 3 && (
-            <p className="text-xs text-orange-600 mt-1">Necesitas al menos {3 - objecionesPrincipales.length} objeción(es) más</p>
-          )}
-        </div>
+        )}
 
-        <div>
-          <Label>Competencia directa *</Label>
-          <div className="flex gap-2 mt-1">
-            <Input
-              value={newCompetidor}
-              onChange={(e) => setNewCompetidor(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCompetidor())}
-              placeholder="Nombre de un competidor"
-            />
-            <Button type="button" variant="outline" onClick={addCompetidor}>
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-2">
+        {objecionesPrincipales.length < 3 && (
+          <p className="error-text">Necesitas {3 - objecionesPrincipales.length} objeción(es) más</p>
+        )}
+      </div>
+
+      {/* Competencia directa */}
+      <div className="field-group">
+        <Label className="label-text">Competencia directa *</Label>
+        <p className="helper-text">Marcas o personas con las que te comparan tus clientes.</p>
+        <div className="flex gap-2 mt-2">
+          <Input
+            value={newCompetidor}
+            onChange={(e) => setNewCompetidor(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCompetidor())}
+            placeholder="Nombre de un competidor"
+            className="flex-1"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addCompetidor}
+            className="border-gray-700 text-gray-300 hover:bg-gray-800"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+        </div>
+        {competenciaDirecta.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
             {competenciaDirecta.map((c, i) => (
-              <span key={i} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full text-sm">
+              <span key={i} className="chip chip-gold">
                 {c}
-                <button onClick={() => onUpdate('competenciaDirecta', competenciaDirecta.filter((_, j) => j !== i))}>
+                <button
+                  type="button"
+                  onClick={() => onUpdate('competenciaDirecta', competenciaDirecta.filter((_, j) => j !== i))}
+                  className="opacity-60 hover:opacity-100 transition-opacity"
+                >
                   <X className="w-3 h-3" />
                 </button>
               </span>
             ))}
           </div>
-        </div>
+        )}
+      </div>
 
-        <div>
-          <Label htmlFor="ventajaCompetitiva">Ventaja competitiva *</Label>
-          <Textarea
-            id="ventajaCompetitiva"
-            className="mt-1 min-h-[80px]"
-            value={ventajaCompetitiva}
-            onChange={(e) => onUpdate('ventajaCompetitiva', e.target.value)}
-            placeholder="¿Por qué alguien debería elegirte a ti sobre la competencia?"
-          />
-        </div>
+      {/* Ventaja competitiva */}
+      <div className="field-group">
+        <Label htmlFor="ventajaCompetitiva" className="label-text">
+          Ventaja competitiva *
+        </Label>
+        <p className="helper-text">¿Por qué alguien debería elegirte a ti sobre la competencia?</p>
+        <Textarea
+          id="ventajaCompetitiva"
+          className="mt-2 min-h-[80px]"
+          value={ventajaCompetitiva}
+          onChange={(e) => onUpdate('ventajaCompetitiva', e.target.value)}
+          placeholder="A diferencia de otros, yo..."
+        />
+      </div>
 
-        <div>
-          <Label htmlFor="costoNoActuar">¿Cuál es el costo de quedarse sin actuar? *</Label>
-          <p className="text-xs text-gray-500 mt-1">
-            Si tu cliente NO resuelve su problema ahora, ¿qué tan mala puede llegar a ser su situación? ¿Qué pierde, qué sigue sufriendo, qué oportunidad se le escapa?
-          </p>
-          <Textarea
-            id="costoNoActuar"
-            className="mt-2 min-h-[90px]"
-            value={costoNoActuar}
-            onChange={(e) => onUpdate('costoNoActuar', e.target.value)}
-            placeholder='Ej: "Seguir perdiendo tiempo y dinero con estrategias que no funcionan. En 12 meses más estarán en el mismo punto, con más competidores encima y menos energía para arrancar."'
-          />
-        </div>
+      {/* Costo de no actuar */}
+      <div className="field-group">
+        <Label htmlFor="costoNoActuar" className="label-text">
+          ¿Cuál es el costo de no actuar? *
+        </Label>
+        <p className="helper-text">
+          Si tu cliente NO resuelve su problema ahora, ¿qué tan mala puede llegar a ser su situación?
+        </p>
+        <Textarea
+          id="costoNoActuar"
+          className="mt-2 min-h-[90px]"
+          value={costoNoActuar}
+          onChange={(e) => onUpdate('costoNoActuar', e.target.value)}
+          placeholder="Seguirán perdiendo tiempo y dinero con estrategias que no funcionan. En 12 meses más estarán en el mismo punto..."
+        />
+      </div>
 
-        <div>
-          <Label htmlFor="errorPrincipal">¿Cuál es el error principal que comete tu cliente? *</Label>
-          <p className="text-xs text-gray-500 mt-1">
-            El error más común que comete tu cliente ideal en relación al problema que ayudas a resolver — el que impide que consiga los resultados que busca.
-          </p>
-          <Textarea
-            id="errorPrincipal"
-            className="mt-2 min-h-[90px]"
-            value={errorPrincipal}
-            onChange={(e) => onUpdate('errorPrincipal', e.target.value)}
-            placeholder='Ej: "Publicar contenido sin estrategia, sin consistencia y esperando que el algoritmo los ayude. Crean mucho pero no tienen claro para quién ni para qué."'
-          />
-        </div>
+      {/* Error principal */}
+      <div className="field-group">
+        <Label htmlFor="errorPrincipal" className="label-text">
+          Error principal del cliente *
+        </Label>
+        <p className="helper-text">
+          El error más común que impide que tu cliente ideal consiga los resultados que busca.
+        </p>
+        <Textarea
+          id="errorPrincipal"
+          className="mt-2 min-h-[90px]"
+          value={errorPrincipal}
+          onChange={(e) => onUpdate('errorPrincipal', e.target.value)}
+          placeholder="Publicar contenido sin estrategia, sin consistencia, esperando que el algoritmo los ayude..."
+        />
+      </div>
 
-        <div>
-          <Label htmlFor="aQuienNoAyudo">¿A qué tipo de personas NO puedes ayudar? *</Label>
-          <p className="text-xs text-gray-500 mt-1">
-            Ser claro en esto filtra clientes incorrectos y hace más creíble tu propuesta. No todo el mundo es tu cliente.
-          </p>
-          <Textarea
-            id="aQuienNoAyudo"
-            className="mt-2 min-h-[80px]"
-            value={aQuienNoAyudo}
-            onChange={(e) => onUpdate('aQuienNoAyudo', e.target.value)}
-            placeholder='Ej: "Personas que buscan resultados sin esfuerzo, que no están dispuestas a cambiar hábitos, o que esperan que yo haga todo el trabajo por ellas."'
-          />
-        </div>
+      {/* A quién no ayudo */}
+      <div className="field-group">
+        <Label htmlFor="aQuienNoAyudo" className="label-text">
+          ¿A quién NO puedes ayudar? *
+        </Label>
+        <p className="helper-text">
+          Ser claro en esto filtra clientes incorrectos y hace más creíble tu propuesta.
+        </p>
+        <Textarea
+          id="aQuienNoAyudo"
+          className="mt-2 min-h-[80px]"
+          value={aQuienNoAyudo}
+          onChange={(e) => onUpdate('aQuienNoAyudo', e.target.value)}
+          placeholder="Personas que buscan resultados sin esfuerzo, que no están dispuestas a cambiar hábitos..."
+        />
       </div>
     </div>
   );
